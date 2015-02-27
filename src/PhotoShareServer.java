@@ -1,4 +1,5 @@
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -17,24 +18,23 @@ public class PhotoShareServer {
 
 	public void startServer (){
 		ServerSocket sSoc = null;
-        
+
 		try {
 			sSoc = new ServerSocket(23456);
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(-1);
 		}
-         
+
 		while(true) {
 			try {
 				Socket inSoc = sSoc.accept();
 				ServerThread newServerThread = new ServerThread(inSoc);
 				newServerThread.start();
-		    }
-		    catch (IOException e) {
-		        e.printStackTrace();
-		    }
-		    
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		//sSoc.close();
 	}
@@ -49,7 +49,7 @@ public class PhotoShareServer {
 			socket = inSoc;
 			System.out.println("thread do server para cada cliente");
 		}
- 
+
 		public void run(){
 			try {
 				ObjectOutputStream outStream = new ObjectOutputStream(socket.getOutputStream());
@@ -57,15 +57,15 @@ public class PhotoShareServer {
 
 				String user = null;
 				String passwd = null;
-			
+
 				try {
 					user = (String)inStream.readObject();
 					passwd = (String)inStream.readObject();
-					System.out.println("thread: depois de receber a password e o user");
+					System.out.println("thread: depois de receber user e password: " + user + ":" + passwd);
 				}catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				}
- 			
+
 				//TODO: refazer
 				//este codigo apenas exemplifica a comunicacao entre o cliente e o servidor
 				//nao faz qualquer tipo de autenticacao
@@ -76,9 +76,34 @@ public class PhotoShareServer {
 					outStream.writeObject(new Boolean(false));
 				}
 
+				int size = 0;
+				byte [] fileByteBuf = null;
+				//C:\Users\Utilizador\Desktop\atkHighUpper0011.png
+				try {
+					size = (Integer) inStream.readObject();
+					String filename = (String) inStream.readObject();
+
+
+					fileByteBuf = new byte[size];
+					inStream.read(fileByteBuf, 0, size);
+					if(size != -1){
+						System.out.println("size received: " + size);
+
+						//TODO find out why images created are invalid(same size)
+
+						FileOutputStream fos = new FileOutputStream(".\\" + filename);
+						fos.write(fileByteBuf);
+						fos.close();
+					}
+					else
+						System.out.println("! read size exceeds real size");
+				}catch (ClassNotFoundException e1) {
+					e1.printStackTrace();
+				}
+
 				outStream.close();
 				inStream.close();
- 			
+
 				socket.close();
 
 			} catch (IOException e) {

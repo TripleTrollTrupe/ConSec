@@ -5,20 +5,34 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Scanner;
 
 public class PhotoShareClient {
 
 	public static void main(String[] args) {
+
+		Scanner sc = new Scanner(System.in);
+
 		System.out.println("client");
+
+		/*System.out.print("Server: ");
+		String server = sc.next();
+		System.out.print("Port: ");
+		int port = sc.nextInt(); */
+
 		PhotoShareClient client = new PhotoShareClient();
-		client.startClient();
+
+		// to enable interactivity, uncomment relevant section above and substitute literals
+		client.startClient("127.0.0.1",23456, sc);
+
+		sc.close();
 	}
 
-	public void startClient() {
+	public void startClient(String server, int port, Scanner sc) {
 		Socket soc = null;
 
 		try {
-			soc = new Socket("127.0.0.1", 23456);
+			soc = new Socket(server, port);
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(-1);
@@ -28,8 +42,14 @@ public class PhotoShareClient {
 			ObjectOutputStream outStream = new ObjectOutputStream(soc.getOutputStream());
 			ObjectInputStream inStream = new ObjectInputStream(soc.getInputStream());
 
-			String user = "lol";
-			String passwd = "lel";
+			/*System.out.print("User: ");
+			String user = sc.next();
+			System.out.print("Password: ");
+			String passwd = sc.next(); */
+
+			// to enable interactivity, uncomment relevant section above and remove this
+			String user = "admin";
+			String passwd = "admin";
 
 			outStream.writeObject(user);
 			outStream.writeObject(passwd);
@@ -38,23 +58,26 @@ public class PhotoShareClient {
 
 			//autenticado
 			if(answer){
-				System.out.println("y");
+				System.out.println("Authentication succeeded");
 
-				File f = new File(""); //TODO add directory path
+				System.out.print("Insert file to send: ");
+				String path = sc.nextLine();
+				File f = new File(path);
 				byte[] fileByteBuf = Files.readAllBytes(f.toPath());
-				
-				//TODO send buf size
-				outStream.writeObject(fileByteBuf.length);
-				
-				outStream.write(fileByteBuf, 0, fileByteBuf.length);
+				int fileSize = fileByteBuf.length;
+				String filename = f.getName();
+
+				outStream.writeObject(fileSize);
+				outStream.writeObject(filename);
+				System.out.println("<-- " + fileSize);
+				outStream.write(fileByteBuf, 0, fileSize);
 			}
 			else
-				System.out.println("no");
+				System.out.println("Authentication failed");
 
 		}catch(IOException e){
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
