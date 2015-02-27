@@ -78,7 +78,6 @@ public class PhotoShareServer {
 
 				int size = 0;
 				byte [] fileByteBuf = null;
-				//C:\Users\Utilizador\Desktop\atkHighUpper0011.png
 				try {
 					size = (Integer) inStream.readObject();
 					String filename = (String) inStream.readObject();
