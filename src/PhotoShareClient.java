@@ -1,4 +1,3 @@
-
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,15 +14,16 @@ public class PhotoShareClient {
 
 		System.out.println("client");
 
-		/*System.out.print("Server: ");
-		String server = sc.next();
-		System.out.print("Port: ");
-		int port = sc.nextInt(); */
+		/*
+		 * System.out.print("Server: "); String server = sc.next();
+		 * System.out.print("Port: "); int port = sc.nextInt();
+		 */
 
 		PhotoShareClient client = new PhotoShareClient();
 
-		// to enable interactivity, uncomment relevant section above and substitute literals
-		client.startClient("127.0.0.1",23456, sc);
+		// to enable interactivity, uncomment relevant section above and
+		// substitute literals
+		client.startClient("127.0.0.1", 23456, sc);
 
 		sc.close();
 	}
@@ -38,16 +38,19 @@ public class PhotoShareClient {
 			System.exit(-1);
 		}
 
-		try{
-			ObjectOutputStream outStream = new ObjectOutputStream(soc.getOutputStream());
-			ObjectInputStream inStream = new ObjectInputStream(soc.getInputStream());
+		try {
+			ObjectOutputStream outStream = new ObjectOutputStream(
+					soc.getOutputStream());
+			ObjectInputStream inStream = new ObjectInputStream(
+					soc.getInputStream());
 
-			/*System.out.print("User: ");
-			String user = sc.next();
-			System.out.print("Password: ");
-			String passwd = sc.next(); */
+			/*
+			 * System.out.print("User: "); String user = sc.next();
+			 * System.out.print("Password: "); String passwd = sc.next();
+			 */
 
-			// to enable interactivity, uncomment relevant section above and remove this
+			// to enable interactivity, uncomment relevant section above and
+			// remove this
 			String user = "admin";
 			String passwd = "admin";
 
@@ -56,14 +59,14 @@ public class PhotoShareClient {
 
 			boolean answer = (Boolean) inStream.readObject();
 
-			//autenticado
-			if(answer){
+			// autenticado
+			if (answer) {
 				System.out.println("Authentication succeeded");
 
 				System.out.print("Insert file to send: ");
 				String path = sc.nextLine();
 				File f = new File(path);
-				
+
 				byte[] fileByteBuf = Files.readAllBytes(f.toPath());
 				int fileSize = fileByteBuf.length;
 				String filename = f.getName();
@@ -71,15 +74,39 @@ public class PhotoShareClient {
 				outStream.writeObject(fileSize);
 				outStream.writeObject(filename);
 				System.out.println("<-- " + fileSize);
+
+				//TODO Kaze was here, and he actually made it work.
 				
-				outStream.write(fileByteBuf, 0, fileSize);
-				
+				int bytesLeft = fileSize; // bytes que faltam enviar
+				int marker = 0; // marcador para saber de onde enviar o pacote
+				while (!(marker + 1024 > fileSize)) { // enquanto puder ser
+														// fragmentado em
+														// pacotes de 1024 bytes
+					outStream.write(fileByteBuf, marker, 1024); // o read so le
+																// 1024 bytes de
+																// cada vez, nao
+																// vale a pena
+																// mandar
+																// maiores
+
+					bytesLeft -= 1024;
+					marker += 1024;
+					System.out.println("total left: " + bytesLeft);
+
+				}
+				System.out.println("Sending last packet, size: " + bytesLeft);
+				outStream.write(fileByteBuf, marker, bytesLeft);
+				System.out
+						.println("Transfer completed! Closing all connections!");
+				outStream.close();
+				inStream.close();
+				soc.close();
 				System.out.println("end of execution");
-			}
-			else
+
+			} else
 				System.out.println("Authentication failed");
 
-		}catch(IOException e){
+		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
