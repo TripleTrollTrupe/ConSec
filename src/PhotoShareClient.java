@@ -63,6 +63,7 @@ public class PhotoShareClient {
 				System.out.print("Insert file to send: ");
 				String path = sc.nextLine();
 				File f = new File(path);
+				
 				byte[] fileByteBuf = Files.readAllBytes(f.toPath());
 				int fileSize = fileByteBuf.length;
 				String filename = f.getName();
@@ -70,7 +71,10 @@ public class PhotoShareClient {
 				outStream.writeObject(fileSize);
 				outStream.writeObject(filename);
 				System.out.println("<-- " + fileSize);
+				
 				outStream.write(fileByteBuf, 0, fileSize);
+				
+				System.out.println("end of execution");
 			}
 			else
 				System.out.println("Authentication failed");

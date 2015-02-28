@@ -5,13 +5,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 //Servidor do servico PhotoShareServer
 
 public class PhotoShareServer {
 
 	public static void main(String[] args) {
-		System.out.println("servidor: main");
+		System.out.println("server: main");
 		PhotoShareServer server = new PhotoShareServer();
 		server.startServer();
 	}
@@ -47,7 +48,7 @@ public class PhotoShareServer {
 
 		ServerThread(Socket inSoc) {
 			socket = inSoc;
-			System.out.println("thread do server para cada cliente");
+			System.out.println("thread: created");
 		}
 
 		public void run(){
@@ -61,7 +62,7 @@ public class PhotoShareServer {
 				try {
 					user = (String)inStream.readObject();
 					passwd = (String)inStream.readObject();
-					System.out.println("thread: depois de receber user e password: " + user + ":" + passwd);
+					System.out.println("thread: received user and password: " + user + ":" + passwd);
 				}catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				}
@@ -77,34 +78,45 @@ public class PhotoShareServer {
 				}
 
 				int size = 0;
-				byte [] fileByteBuf = null;
-				//C:\Users\Utilizador\Desktop\atkHighUpper0011.png
+				//FileOutputStream fos = null;
+				//C:\Users\Utilizador\Desktop\a.png
 				try {
 					size = (Integer) inStream.readObject();
 					String filename = (String) inStream.readObject();
 
+					System.out.println("--> " + size);
+					System.out.println(filename);
+					
+					byte [] fileByteBuf = new byte [size];
+					System.out.println("fileByteBuf length: " + fileByteBuf.length);
+					
+					// This only reads 1024 bytes, which is why I suspect it bugs out
+					 int actual = inStream.read(fileByteBuf, 0, size);
+					 System.out.println("actual read: " + actual);
 
-					fileByteBuf = new byte[size];
-					inStream.read(fileByteBuf, 0, size);
-					if(size != -1){
-						System.out.println("size received: " + size);
+					//TODO find out why images created are invalid(same size)
 
-						//TODO find out why images created are invalid(same size)
-
-						FileOutputStream fos = new FileOutputStream(".\\" + filename);
-						fos.write(fileByteBuf);
-						fos.close();
-					}
-					else
-						System.out.println("! read size exceeds real size");
+					/*
+					fos = new FileOutputStream(".\\" + filename);
+					fos.write(fileByteBuf);
+					fos.close();
+					*/
+					
+					
+					
+					
+					
 				}catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
+				}catch(SocketException e2){
+					e2.printStackTrace();
 				}
 
 				outStream.close();
 				inStream.close();
 
 				socket.close();
+				System.out.println("thread: dead");
 
 			} catch (IOException e) {
 				e.printStackTrace();
