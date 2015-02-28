@@ -79,15 +79,12 @@ public class PhotoShareClient {
 				
 				int bytesLeft = fileSize; // bytes que faltam enviar
 				int marker = 0; // marcador para saber de onde enviar o pacote
-				while (!(marker + 1024 > fileSize)) { // enquanto puder ser
-														// fragmentado em
-														// pacotes de 1024 bytes
-					outStream.write(fileByteBuf, marker, 1024); // o read so le
-																// 1024 bytes de
-																// cada vez, nao
-																// vale a pena
-																// mandar
-																// maiores
+				
+				// enquanto puder ser fragmentado em pacotes de 1024 bytes
+				while (!(marker + 1024 > fileSize)) { 
+					
+					// o read so le 1024 bytes de cada vez, nao vale a pena mandar mais de cada vez
+					outStream.write(fileByteBuf, marker, 1024); 
 
 					bytesLeft -= 1024;
 					marker += 1024;

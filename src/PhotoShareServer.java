@@ -16,6 +16,8 @@ public class PhotoShareServer {
 		server.startServer();
 	}
 
+	//TODO Cause server is never stopped in this implementation
+	@SuppressWarnings("resource")
 	public void startServer() {
 		ServerSocket sSoc = null;
 
@@ -79,7 +81,6 @@ public class PhotoShareServer {
 
 				int size = 0;
 				FileOutputStream fos = null;
-				// C:\Users\Utilizador\Desktop\a.png
 				try {
 					size = (Integer) inStream.readObject();
 					String filename = (String) inStream.readObject();
@@ -90,15 +91,12 @@ public class PhotoShareServer {
 					byte[] fileByteBuf = new byte[size];
 					System.out.println("fileByteBuf length: "
 							+ fileByteBuf.length);
-
-					//TODO Kaze was here and he actually made it work.
 					
 					int bytesRead = 0; // bytes jah lidos
 					fos = new FileOutputStream(".\\" + filename);
-
-					while (bytesRead < size) { // enquanto o total dos bytes
-						// lidos forem menor que o
-						// tamanho do ficheiro
+					
+					// enquanto o total dos bytes lidos forem menor que o tamanho do ficheiro
+					while (bytesRead < size) {	
 						int count = inStream.read(fileByteBuf);
 						if (count == -1) {
 							throw new IOException("Expected file size: " + size
@@ -111,14 +109,17 @@ public class PhotoShareServer {
 								+ " out of " + size);
 					}
 					System.out.println("File transfer completed!");
+					
 					fos.close();
 
 				} catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				} catch (SocketException e2) {
 					e2.printStackTrace();
+				} finally{
+					fos.close();
 				}
-
+				
 				outStream.close();
 				inStream.close();
 
