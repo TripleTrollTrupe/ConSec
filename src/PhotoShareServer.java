@@ -88,16 +88,14 @@ public class PhotoShareServer {
 					System.out.println("--> " + size);
 					System.out.println(filename);
 
-					byte[] fileByteBuf = new byte[size];
-					System.out.println("fileByteBuf length: "
-							+ fileByteBuf.length);
+					byte[] fileByteBuf = new byte[1024];
 					
 					int bytesRead = 0; // bytes jah lidos
-					fos = new FileOutputStream(".\\" + filename);
+					fos = new FileOutputStream("/home/ALUNOSFC/fc44223/SCtrue/ConSec/" + filename);
 					
 					// enquanto o total dos bytes lidos forem menor que o tamanho do ficheiro
 					while (bytesRead < size) {	
-						int count = inStream.read(fileByteBuf);
+						int count = inStream.read(fileByteBuf, 0, 1024);
 						if (count == -1) {
 							throw new IOException("Expected file size: " + size
 									+ "read size: " + bytesRead);
