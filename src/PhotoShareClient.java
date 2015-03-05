@@ -1,9 +1,9 @@
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.util.Scanner;
 
 public class PhotoShareClient {
@@ -67,34 +67,24 @@ public class PhotoShareClient {
 				String path = sc.nextLine();
 				File f = new File(path);
 
-				byte[] fileByteBuf = Files.readAllBytes(f.toPath());
-				int fileSize = fileByteBuf.length;
+				byte[] fileByteBuf = new byte [1024];
+				int fileSize = (int) f.length();
 				String filename = f.getName();
 
 				outStream.writeObject(fileSize);
 				outStream.writeObject(filename);
 				System.out.println("<-- " + fileSize);
 
-				//TODO Kaze was here, and he actually made it work.
-				
-				int bytesLeft = fileSize; // bytes que faltam enviar
-				int marker = 0; // marcador para saber de onde enviar o pacote
-				
 				// enquanto puder ser fragmentado em pacotes de 1024 bytes
-				while (!(marker + 1024 > fileSize)) { 
-					
+				int n;
+				FileInputStream fin = new FileInputStream(f);
+				while ((n=fin.read(fileByteBuf, 0, 1024))>0) { 
+
 					// o read so le 1024 bytes de cada vez, nao vale a pena mandar mais de cada vez
-					outStream.write(fileByteBuf, marker, 1024); 
-
-					bytesLeft -= 1024;
-					marker += 1024;
-					System.out.println("total left: " + bytesLeft);
-
+					outStream.write(fileByteBuf, 0, n);
 				}
-				System.out.println("Sending last packet, size: " + bytesLeft);
-				outStream.write(fileByteBuf, marker, bytesLeft);
-				System.out
-						.println("Transfer completed! Closing all connections!");
+				System.out.println("Transfer completed! Closing all connections!");
+				fin.close();
 				outStream.close();
 				inStream.close();
 				soc.close();
