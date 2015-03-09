@@ -1,38 +1,57 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-//Servidor do servico PhotoShareServer
+// PhotoShareServer
 
 public class PhotoShareServer {
 
+	protected int serverPort;
+
 	public static void main(String[] args) {
 		System.out.println("server: main");
-		PhotoShareServer server = new PhotoShareServer();
-		server.startServer();
+
+		if(args.length == 1){
+			PhotoShareServer server = new PhotoShareServer(Integer.parseInt((args[0])));
+			server.startServer();
+		}
+		else{
+			System.out.println("Incorrect use!");
+			System.out.println("Correct usage: PhotoShareServer <port>");
+		}
 	}
 
-	//TODO Cause server is never stopped in this implementation
+	public PhotoShareServer(int port) {
+		this.serverPort = port;
+	}
+
+	// Because server is never stopped in this implementation
 	@SuppressWarnings("resource")
 	public void startServer() {
 		ServerSocket sSoc = null;
 
 		try {
-			sSoc = new ServerSocket(23456);
+			sSoc = new ServerSocket(this.serverPort);
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(-1);
 		}
 
+		ExecutorService threadPool = Executors.newFixedThreadPool(20);
+
 		while (true) {
 			try {
 				Socket inSoc = sSoc.accept();
-				ServerThread newServerThread = new ServerThread(inSoc);
-				newServerThread.start();
+				threadPool.execute(new ServerThread(inSoc));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -40,7 +59,7 @@ public class PhotoShareServer {
 		// sSoc.close();
 	}
 
-	// Threads utilizadas para comunicacao com os clientes
+	// threads
 	class ServerThread extends Thread {
 
 		private Socket socket = null;
@@ -63,70 +82,107 @@ public class PhotoShareServer {
 				try {
 					user = (String) inStream.readObject();
 					passwd = (String) inStream.readObject();
-					System.out.println("thread: received user and password: "
-							+ user + ":" + passwd);
 				} catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
-				}
+				}				
 
-				// TODO: refazer
-				// este codigo apenas exemplifica a comunicacao entre o cliente
-				// e o servidor
-				// nao faz qualquer tipo de autenticacao
-				if (user.length() != 0) {
-					outStream.writeObject(new Boolean(true));
-				} else {
-					outStream.writeObject(new Boolean(false));
-				}
-
-				int size = 0;
-				FileOutputStream fos = null;
-				try {
-					size = (Integer) inStream.readObject();
-					String filename = (String) inStream.readObject();
-
-					System.out.println("--> " + size);
-					System.out.println(filename);
-
-					byte[] fileByteBuf = new byte[1024];
+				// auhenticates user
+				if(authenticate(outStream, user, passwd)){
 					
-					int bytesRead = 0; // bytes jah lidos
-					fos = new FileOutputStream("/home/ALUNOSFC/fc44223/SCtrue/ConSec/" + filename);
-					
-					// enquanto o total dos bytes lidos forem menor que o tamanho do ficheiro
-					while (bytesRead < size) {	
-						int count = inStream.read(fileByteBuf, 0, 1024);
-						if (count == -1) {
-							throw new IOException("Expected file size: " + size
-									+ "read size: " + bytesRead);
-						}
+					receiveFile(inStream);
 
-						fos.write(fileByteBuf, 0, count);
-						bytesRead += count;
-						System.out.println("total received: " + bytesRead
-								+ " out of " + size);
-					}
-					System.out.println("File transfer completed!");
-					
-					fos.close();
+					outStream.close();
+					inStream.close();
 
-				} catch (ClassNotFoundException e1) {
-					e1.printStackTrace();
-				} catch (SocketException e2) {
-					e2.printStackTrace();
-				} finally{
-					fos.close();
-				}
-				
-				outStream.close();
-				inStream.close();
-
-				socket.close();
-				System.out.println("thread: dead");
+					socket.close();
+					System.out.println("thread: dead");
+				} else
+					System.out.println("Invalid Credentials!");
 
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+
+		// authenticate user and password from local file 
+		private boolean authenticate(ObjectOutputStream outStream, String user, String passwd) throws IOException {
+
+			File up = new File("." + File.separator + "shadow" + File.separator + "up");
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(up)));
+			boolean auth = false;
+
+			if (user.length() != 0){
+
+				String line;
+				while((line = br.readLine()) != null && !auth){
+					System.out.println("reading from file: " + line);
+					auth = (user + ":" + passwd).equalsIgnoreCase(line);
+				}
+				outStream.writeObject(new Boolean(auth));
+			}
+			br.close();
+
+			return auth;
+		}
+
+		// receive a file from inStream, receives size first and then the bytes
+		private void receiveFile(ObjectInputStream inStream) throws IOException {
+
+			FileOutputStream fos = null;
+
+			try{
+				int size = 0;
+				String filename = "";
+
+				try {
+					size = (Integer) inStream.readObject();
+					filename = (String) inStream.readObject();
+				} catch (ClassNotFoundException e1) {
+					e1.printStackTrace();
+				}		
+
+
+				System.out.println("--> " + size);
+				System.out.println(filename);
+
+				byte[] fileByteBuf = new byte[1024];
+
+				int bytesRead = 0; // bytes jah lidos
+				fos = new FileOutputStream("." + File.separator + filename);
+
+				// TODO display dynamic progress
+				// int lastLineLength = 0;
+
+				while (bytesRead < size) {	
+					int count = inStream.read(fileByteBuf, 0, 1024);
+					if (count == -1) {
+						throw new IOException("Expected file size: " + size
+								+ "\nRead size: " + bytesRead);
+					}
+
+					fos.write(fileByteBuf, 0, count);
+					bytesRead += count;
+
+					/* TODO display dynamic progress
+					lastLineLength = ("total received: " + bytesRead + " out of " + size).length();
+
+					for(int i = 0; i < lastLineLength; i++)
+						System.out.print("\b");
+
+						// REMOVE LN AND UNCOMMENT BELOW
+					 */
+
+					System.out.println("total received: " + bytesRead + " out of " + size);
+				}
+				//System.out.println();
+				System.out.println("File transfer completed!");
+
+			} finally {
+				if(fos != null)
+					fos.close();
+			}
+		}
+		
+		
 	}
 }
