@@ -1,8 +1,11 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -11,8 +14,10 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.nio.file.Files;
 
 // PhotoShareServer
 
@@ -225,6 +230,39 @@ public class PhotoShareServer {
 			return true;
 		}
 
+
+	}
+	
+	@SuppressWarnings("unused")
+	private Boolean updateSubscriber(String user,String name){
+		BufferedReader read = null;
+		String Lines;
+		Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions.txt");
+		try {
+			read = new BufferedReader(new FileReader(fpath.toString()));
+			Lines = read.readLine();
+			while(!Lines.equals(name) && Lines != null){
+				Lines = read.readLine();
+			}
+			
+			if(Lines == null)
+				return false;
+			else{
+				
+				// usar path para ir para a diretoria do outro utilizador?
+				// depois como pegar em cada ficheiro e mandar
+				
+				
+				
+			}
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 
 	}
 }
