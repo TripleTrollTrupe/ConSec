@@ -8,6 +8,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -76,9 +79,10 @@ public class PhotoShareServer {
 				ObjectInputStream inStream = new ObjectInputStream(
 						socket.getInputStream());
 
-				String user = null;
-				String passwd = null;
+				String user = "";
+				String passwd = "";
 
+				// get user and password
 				try {
 					user = (String) inStream.readObject();
 					passwd = (String) inStream.readObject();
@@ -88,16 +92,39 @@ public class PhotoShareServer {
 
 				// auhenticates user
 				if(authenticate(outStream, user, passwd)){
-					
-					receiveFile(inStream);
 
-					outStream.close();
-					inStream.close();
+					String option = "";
+					boolean working = true;
 
-					socket.close();
+					// get and proccess client requests
+					while(working) {
+						try {
+							option = (String) inStream.readObject();
+						} catch(ClassNotFoundException e1) {
+							e1.printStackTrace();
+						}
+
+						switch(option) {
+
+						case "-p":
+							working = receiveFile(inStream, outStream, user);
+							break;
+
+						case "-t":
+							System.out.println("Finished processing user " + user + " request");
+							working = false;
+							break;
+						}
+					}
 					System.out.println("thread: dead");
 				} else
 					System.out.println("Invalid Credentials!");
+
+
+				outStream.close();
+				inStream.close();
+
+				socket.close();
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -115,7 +142,6 @@ public class PhotoShareServer {
 
 				String line;
 				while((line = br.readLine()) != null && !auth){
-					System.out.println("reading from file: " + line);
 					auth = (user + ":" + passwd).equalsIgnoreCase(line);
 				}
 				outStream.writeObject(new Boolean(auth));
@@ -126,7 +152,7 @@ public class PhotoShareServer {
 		}
 
 		// receive a file from inStream, receives size first and then the bytes
-		private void receiveFile(ObjectInputStream inStream) throws IOException {
+		private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException {
 
 			FileOutputStream fos = null;
 
@@ -145,10 +171,24 @@ public class PhotoShareServer {
 				System.out.println("--> " + size);
 				System.out.println(filename);
 
-				byte[] fileByteBuf = new byte[1024];
+				// create file and directories if non existing
+				Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + filename);
+				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + filename);
+				if(!f.exists()){
+					Files.createDirectories(fpath.getParent());
+					f.createNewFile();
+				}
+				else{
+					System.out.println("Already existing file!");
+					outStream.writeObject(new Boolean(false));
+					return false;
+				}
+				
+				outStream.writeObject(new Boolean(true));
 
+				byte[] fileByteBuf = new byte[1024];
 				int bytesRead = 0; // bytes jah lidos
-				fos = new FileOutputStream("." + File.separator + filename);
+				fos = new FileOutputStream(f);
 
 				// TODO display dynamic progress
 				// int lastLineLength = 0;
@@ -169,10 +209,10 @@ public class PhotoShareServer {
 					for(int i = 0; i < lastLineLength; i++)
 						System.out.print("\b");
 
-						// REMOVE LN AND UNCOMMENT BELOW
+						// UNCOMMENT BELOW
+					System.out.print("total received: " + bytesRead + " out of " + size);
 					 */
 
-					System.out.println("total received: " + bytesRead + " out of " + size);
 				}
 				//System.out.println();
 				System.out.println("File transfer completed!");
@@ -181,8 +221,10 @@ public class PhotoShareServer {
 				if(fos != null)
 					fos.close();
 			}
+
+			return true;
 		}
-		
-		
+
+
 	}
 }
