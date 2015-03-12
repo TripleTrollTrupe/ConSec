@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -110,6 +111,10 @@ public class PhotoShareServer {
 							working = receiveFile(inStream, outStream, user);
 							break;
 
+						case "-l":
+							fetchPhotoInfo(inStream, outStream, user);
+							break;
+
 						case "-t":
 							System.out.println("Finished processing user " + user + " request");
 							working = false;
@@ -125,7 +130,8 @@ public class PhotoShareServer {
 				inStream.close();
 
 				socket.close();
-
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -183,7 +189,7 @@ public class PhotoShareServer {
 					outStream.writeObject(new Boolean(false));
 					return false;
 				}
-				
+
 				outStream.writeObject(new Boolean(true));
 
 				byte[] fileByteBuf = new byte[1024];
@@ -227,4 +233,44 @@ public class PhotoShareServer {
 
 
 	}
+
+	private boolean follows(String user, String userID) throws IOException {
+
+		File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions");
+
+		if(!f.exists())
+			return false;
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+		boolean follows = false;
+
+		String line;
+		while((line = br.readLine()) != null && !follows){
+			follows = (userID).equals(line);
+		}
+		br.close();
+
+		return follows;
+	}
+
+	//get all comments from a certain subscriber
+	private void fetchPhotoInfo(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException{
+
+
+		String userID = (String) inStream.readObject();
+		if(!follows(user,userID)){
+			System.out.println("User not subscribed or doesn't exist");
+			return;
+		}
+		File folder = new File("." + File.separator + "data"+ File.separator + userID + File.separator + "photos");
+		File[] list = folder.listFiles();
+		for(int i =0;i<list.length;i++){
+			SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+			outStream.writeObject("Photo Name" + list[i].getName() + "Upload Date" + date.format(list[i].lastModified()));
+			outStream.writeObject(true);
+		}
+		outStream.writeObject("No more photos");
+		outStream.writeObject(false);
+	}
 }
+
