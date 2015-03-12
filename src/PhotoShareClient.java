@@ -1,10 +1,14 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -114,7 +118,17 @@ public class PhotoShareClient {
 					case "-g":
 						outStream.writeObject("-g");
 						outStream.writeObject(optionArgs[5]);
-						//TODO what are comments?
+						//Recebe falha
+						if(inStream.readObject() == new Boolean("false")){
+							System.out.println("Error in getting files");
+						}
+						//ciclo que recebe
+						else{
+							while(!(inStream.readObject() == new Boolean("true")))
+									receiveFile(inStream, outStream,userID);
+						}
+						
+						
 						break;
 
 					case "-c":
@@ -222,4 +236,79 @@ public class PhotoShareClient {
 
 
 	}
+	
+	// receive a file from inStream, receives size first and then the bytes
+	private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException {
+
+		FileOutputStream fos = null;
+
+		try{
+			int size = 0;
+			String filename = "";
+
+			try {
+				size = (Integer) inStream.readObject();
+				filename = (String) inStream.readObject();
+			} catch (ClassNotFoundException e1) {
+				e1.printStackTrace();
+			}		
+
+
+			System.out.println("--> " + size);
+			System.out.println(filename);
+
+			// create file and directories if non existing TODO Change if necessary
+			Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
+			File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
+			if(!f.exists()){
+				Files.createDirectories(fpath.getParent());
+				f.createNewFile();
+			}
+			else{
+				System.out.println("Already existing file!");
+				outStream.writeObject(new Boolean(false));
+				return false;
+			}
+
+			outStream.writeObject(new Boolean(true));
+
+			byte[] fileByteBuf = new byte[1024];
+			int bytesRead = 0; // bytes jah lidos
+			fos = new FileOutputStream(f);
+
+			// TODO display dynamic progress
+			// int lastLineLength = 0;
+
+			while (bytesRead < size) {	
+				int count = inStream.read(fileByteBuf, 0, 1024);
+				if (count == -1) {
+					throw new IOException("Expected file size: " + size
+							+ "\nRead size: " + bytesRead);
+				}
+
+				fos.write(fileByteBuf, 0, count);
+				bytesRead += count;
+
+				/* TODO display dynamic progress
+				lastLineLength = ("total received: " + bytesRead + " out of " + size).length();
+
+				for(int i = 0; i < lastLineLength; i++)
+					System.out.print("\b");
+
+					// UNCOMMENT BELOW
+				System.out.print("total received: " + bytesRead + " out of " + size);
+				 */
+
+			}
+			//System.out.println();
+			System.out.println("File transfer completed!");
+
+		} finally {
+			if(fos != null)
+				fos.close();
+		}
+
+		return true;
+	}
+	
 }

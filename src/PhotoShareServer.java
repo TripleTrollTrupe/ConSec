@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -339,11 +340,15 @@ public class PhotoShareServer {
 		 */
 		private boolean UpdateFollower(String userID,String subs,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException{
 			//Verificacao da existencia das duas entidades
-			if(!userExists(userID) || !userExists(subs))
+			if(!userExists(userID) || !userExists(subs)){
+				outStream.writeObject(new Boolean("false"));
 				return false;
+			}
 			//verificacao da subscricao
-			if(!follows(subs,userID))
+			if(!follows(subs,userID)){
+				outStream.writeObject(new Boolean("false"));
 				return false;
+			}
 			//Lista de fotos diretoria,nomes
 			File photoDock =new File(/*path ->*/"." + File.separator + "data" + File.separator + userID + File.separator + "photos");
 			//
@@ -370,7 +375,7 @@ public class PhotoShareServer {
 				j=0;
 					
 			}
-
+			outStream.writeObject(new Boolean("true"));
 			return true;
 		}
 		
