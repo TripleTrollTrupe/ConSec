@@ -107,10 +107,8 @@ public class PhotoShareClient {
 						break;
 
 					case "-l":
-						outStream.writeObject("-l");
-						outStream.writeObject(optionArgs[5]);
-						System.out.println((String) inStream.readObject());
-						System.out.println("end of execution");
+
+						getPhotoInfo(outStream,inStream,optionArgs[1]);
 						break;
 
 					case "-g":
@@ -206,5 +204,22 @@ public class PhotoShareClient {
 		}
 
 		return noError;
+	}
+
+	private void getPhotoInfo(ObjectOutputStream outStream, ObjectInputStream inStream, String userId) throws IOException, ClassNotFoundException{
+		boolean keepReading = true;
+
+		outStream.writeObject("-l");
+		outStream.writeObject(userId);
+		if(!(Boolean)inStream.readObject()){ // se nao pertencer ou nao existir
+			System.out.println("Not an existing or subscribed user");
+			return; // nothing else to do, exits method
+		}
+		while(keepReading){
+			System.out.println((String) inStream.readObject()); // prints date and photo name
+			keepReading= (Boolean) inStream.readObject(); // checks if there still is info to receive
+		}
+
+
 	}
 }

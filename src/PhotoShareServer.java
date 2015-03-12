@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -110,6 +111,10 @@ public class PhotoShareServer {
 
 						case "-p":
 							working = receiveFile(inStream, outStream, user);
+							break;
+
+						case "-l":
+							fetchPhotoInfo(inStream, outStream, user);
 							break;
 
 						case "-c":
@@ -321,4 +326,46 @@ public class PhotoShareServer {
 				return false;
 		}
 	}
+
+	private boolean follows(String user, String userID) throws IOException {
+
+		File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions");
+
+		if(!f.exists())
+			return false;
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+		boolean follows = false;
+
+		String line;
+		while((line = br.readLine()) != null && !follows){
+			follows = (userID).equals(line);
+		}
+		br.close();
+
+		return follows;
+	}
+
+	//get all comments from a certain subscriber
+	private void fetchPhotoInfo(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException{
+
+
+		String userID = (String) inStream.readObject();
+		/*if(!follows(user,userID)){
+			System.out.println("User not subscribed or doesn't exist");
+			return;
+		}*/
+		outStream.writeObject(follows(user,userID)||(user.equals(userID))); // if the the target user is followed or is himself
+		File folder = new File("." + File.separator + "data"+ File.separator + userID + File.separator + "photos");
+
+		File[] list = folder.listFiles();
+		for(int i =0;i<list.length;i++){
+			SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+			outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
+			outStream.writeObject(true);
+		}
+		outStream.writeObject("No more photos");
+		outStream.writeObject(false);
+	}
+
 }
