@@ -258,19 +258,22 @@ public class PhotoShareServer {
 
 
 		String userID = (String) inStream.readObject();
-		if(!follows(user,userID)){
+		/*if(!follows(user,userID)){
 			System.out.println("User not subscribed or doesn't exist");
 			return;
-		}
+		}*/
+		outStream.writeObject(follows(user,userID)||(user.equals(userID))); // if the the target user is followed or is himself
 		File folder = new File("." + File.separator + "data"+ File.separator + userID + File.separator + "photos");
+
 		File[] list = folder.listFiles();
 		for(int i =0;i<list.length;i++){
 			SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-			outStream.writeObject("Photo Name" + list[i].getName() + "Upload Date" + date.format(list[i].lastModified()));
+			outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
 			outStream.writeObject(true);
 		}
 		outStream.writeObject("No more photos");
 		outStream.writeObject(false);
 	}
+
 }
 
