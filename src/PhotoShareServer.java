@@ -141,6 +141,13 @@ public class PhotoShareServer {
 							System.out.println("Finished processing user " + user + " request");
 							working = false;
 							break;
+							
+						case "-g":
+							String subsID = "";
+							userID = (String) inStream.readObject();
+							subsID = (String) inStream.readObject();
+							UpdateFollower(userID, subsID, outStream, inStream);
+							break;
 						}
 					}
 					System.out.println("thread: dead");
@@ -325,6 +332,86 @@ public class PhotoShareServer {
 			else
 				return false;
 		}
+		
+		/*
+		 * Metodo que verifica se um dado utilizador esta subscrito a outro e envia tudo do que
+		 * esta subscrito
+		 */
+		private boolean UpdateFollower(String userID,String subs,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException{
+			//Verificacao da existencia das duas entidades
+			if(!userExists(userID) || !userExists(subs))
+				return false;
+			//verificacao da subscricao
+			if(!follows(subs,userID))
+				return false;
+			//Lista de fotos diretoria,nomes
+			File photoDock =new File(/*path ->*/"." + File.separator + "data" + File.separator + userID + File.separator + "photos");
+			//
+			String[] photoName = photoDock.list();
+			//Lista de commentarios diretoria,nomes
+			File commentsDock =new File(/*path ->*/"." + File.separator + "data" + File.separator + userID + File.separator + "Comments");
+			String[] commentsName = commentsDock.list();
+			int j = 0;
+			for(int i = 0; i<photoName.length;i++){
+				while(!photoName[i].split(".").equals(commentsName[j].split(".")) && j<commentsName.length)
+						j++;
+				if(j==commentsName.length){ // nao tem comentario
+					// mandar so a foto
+					sendFile(outStream, inStream, photoName[i]);
+				}
+				
+				else{
+					//mandar foto e comentario
+					sendFile(outStream, inStream, photoName[i]);
+					sendFile(outStream, inStream, commentsName[j]);
+					
+				}
+				
+				j=0;
+					
+			}
+
+			return true;
+		}
+		
+		private boolean sendFile(ObjectOutputStream outStream, ObjectInputStream inStream, String file) throws IOException, ClassNotFoundException {
+
+			boolean noError = true;
+
+			//outStream.writeObject("-p");
+			File f = new File(file);
+
+			byte[] fileByteBuf = new byte [1024];
+			int fileSize = (int) f.length();
+			String filename = f.getName();
+
+			outStream.writeObject(fileSize);
+			outStream.writeObject(filename);
+			System.out.println("<-- " + fileSize);
+			System.out.println(filename);
+
+			noError = (Boolean) inStream.readObject();
+
+			if(noError){
+				// send packets of max 1024 bytes
+				int n;
+				FileInputStream fin = new FileInputStream(f);
+				while ((n=fin.read(fileByteBuf, 0, 1024))>0) { 
+					outStream.write(fileByteBuf, 0, n);
+				}
+				System.out.println("File transfer completed!");
+				fin.close();
+			}
+
+			return noError;
+		}
+		
+		
+
+
+		
+		
+		
 	}
 
 	private boolean follows(String user, String userID) throws IOException {
@@ -367,5 +454,8 @@ public class PhotoShareServer {
 		outStream.writeObject("No more photos");
 		outStream.writeObject(false);
 	}
+	
+	
+	
 
 }
