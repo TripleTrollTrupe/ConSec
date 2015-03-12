@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -118,17 +117,23 @@ public class PhotoShareServer {
 							fetchPhotoInfo(inStream, outStream, user);
 							break;
 
+						case "-g":
+							String subsID = "";
+							subsID = (String) inStream.readObject();
+							UpdateFollower(user, subsID, outStream, inStream);
+							break;
+
 						case "-c":
 							String comment = "";
-							String userID = "";
+							String commentingUser = "";
 							String filename = "";
 
 							comment = (String) inStream.readObject();
-							userID = (String) inStream.readObject();
+							commentingUser = (String) inStream.readObject();
 							filename = (String) inStream.readObject();
 
 							// output operation outcome 
-							outStream.writeObject(comment(user, comment, userID, filename));
+							outStream.writeObject(comment(user, comment, commentingUser, filename));
 
 							break;
 
@@ -141,13 +146,6 @@ public class PhotoShareServer {
 						case "-t":
 							System.out.println("Finished processing user " + user + " request");
 							working = false;
-							break;
-							
-						case "-g":
-							String subsID = "";
-							userID = (String) inStream.readObject();
-							subsID = (String) inStream.readObject();
-							UpdateFollower(userID, subsID, outStream, inStream);
 							break;
 						}
 					}
@@ -181,7 +179,7 @@ public class PhotoShareServer {
 				while((line = br.readLine()) != null && !auth){
 					auth = (user + ":" + passwd).equals(line);
 				}
-				outStream.writeObject(new Boolean(auth));
+				outStream.writeObject(auth);
 			}
 			br.close();
 
@@ -217,18 +215,15 @@ public class PhotoShareServer {
 				}
 				else{
 					System.out.println("Already existing file!");
-					outStream.writeObject(new Boolean(false));
+					outStream.writeObject(false);
 					return false;
 				}
 
-				outStream.writeObject(new Boolean(true));
+				outStream.writeObject(true);
 
 				byte[] fileByteBuf = new byte[1024];
 				int bytesRead = 0; // bytes jah lidos
 				fos = new FileOutputStream(f);
-
-				// TODO display dynamic progress
-				// int lastLineLength = 0;
 
 				while (bytesRead < size) {	
 					int count = inStream.read(fileByteBuf, 0, 1024);
@@ -240,18 +235,7 @@ public class PhotoShareServer {
 					fos.write(fileByteBuf, 0, count);
 					bytesRead += count;
 
-					/* TODO display dynamic progress
-					lastLineLength = ("total received: " + bytesRead + " out of " + size).length();
-
-					for(int i = 0; i < lastLineLength; i++)
-						System.out.print("\b");
-
-						// UNCOMMENT BELOW
-					System.out.print("total received: " + bytesRead + " out of " + size);
-					 */
-
 				}
-				//System.out.println();
 				System.out.println("File transfer completed!");
 
 			} finally {
@@ -333,57 +317,47 @@ public class PhotoShareServer {
 			else
 				return false;
 		}
-		
-		/*
-		 * Metodo que verifica se um dado utilizador esta subscrito a outro e envia tudo do que
-		 * esta subscrito
-		 */
+
 		private boolean UpdateFollower(String userID,String subs,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException{
-			//Verificacao da existencia das duas entidades
+
 			if(!userExists(userID) || !userExists(subs)){
-				outStream.writeObject(new Boolean("false"));
+				outStream.writeObject(false);
 				return false;
 			}
-			//verificacao da subscricao
-			if(!follows(subs,userID)){
-				outStream.writeObject(new Boolean("false"));
+			if(!follows(userID,subs) && !(userID.equals(subs))){
+				outStream.writeObject(false);
 				return false;
 			}
-			//Lista de fotos diretoria,nomes
-			File photoDock =new File(/*path ->*/"." + File.separator + "data" + File.separator + userID + File.separator + "photos");
-			//
-			String[] photoName = photoDock.list();
-			//Lista de commentarios diretoria,nomes
-			File commentsDock =new File(/*path ->*/"." + File.separator + "data" + File.separator + userID + File.separator + "Comments");
-			String[] commentsName = commentsDock.list();
-			int j = 0;
-			for(int i = 0; i<photoName.length;i++){
-				while(!photoName[i].split(".").equals(commentsName[j].split(".")) && j<commentsName.length)
-						j++;
-				if(j==commentsName.length){ // nao tem comentario
-					// mandar so a foto
-					sendFile(outStream, inStream, photoName[i]);
+			// validated operation, start sending
+			outStream.writeObject(true);
+
+			File photoDir =new File("." + File.separator + "data" + File.separator + subs+ File.separator + "photos");
+			String[] photos= photoDir.list();
+			File commentsDir =new File("." + File.separator + "data" + File.separator + subs + File.separator + "comments");
+			String[] comments = commentsDir.list();
+
+			if(photos != null)
+				for(int i = 0; i < photos.length; i++){
+					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subs+ File.separator + "photos" + File.separator + photos[i]);
 				}
-				
-				else{
-					//mandar foto e comentario
-					sendFile(outStream, inStream, photoName[i]);
-					sendFile(outStream, inStream, commentsName[j]);
-					
+
+			outStream.writeObject("-t");
+
+			if(comments != null)
+				for(int i = 0; i < comments.length; i++){
+					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subs+ File.separator + "comments" + File.separator + comments[i]);
 				}
-				
-				j=0;
-					
-			}
-			outStream.writeObject(new Boolean("true"));
+
+			outStream.writeObject("-t");
+
 			return true;
 		}
-		
+
 		private boolean sendFile(ObjectOutputStream outStream, ObjectInputStream inStream, String file) throws IOException, ClassNotFoundException {
 
 			boolean noError = true;
 
-			//outStream.writeObject("-p");
+			outStream.writeObject("-p");
 			File f = new File(file);
 
 			byte[] fileByteBuf = new byte [1024];
@@ -410,57 +384,25 @@ public class PhotoShareServer {
 
 			return noError;
 		}
-		
-		
 
 
-		
-		
-		
-	}
+		//get all comments from a certain subscriber
+		private void fetchPhotoInfo(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException{
 
-	private boolean follows(String user, String userID) throws IOException {
 
-		File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions");
+			String userID = (String) inStream.readObject();
 
-		if(!f.exists())
-			return false;
+			outStream.writeObject(follows(user,userID)||(user.equals(userID))); // if the the target user is followed or is himself
+			File folder = new File("." + File.separator + "data"+ File.separator + userID + File.separator + "photos");
 
-		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
-		boolean follows = false;
-
-		String line;
-		while((line = br.readLine()) != null && !follows){
-			follows = (userID).equals(line);
+			File[] list = folder.listFiles();
+			for(int i =0;i<list.length;i++){
+				SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+				outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
+				outStream.writeObject(true);
+			}
+			outStream.writeObject("No more photos");
+			outStream.writeObject(false);
 		}
-		br.close();
-
-		return follows;
 	}
-
-	//get all comments from a certain subscriber
-	private void fetchPhotoInfo(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException{
-
-
-		String userID = (String) inStream.readObject();
-		/*if(!follows(user,userID)){
-			System.out.println("User not subscribed or doesn't exist");
-			return;
-		}*/
-		outStream.writeObject(follows(user,userID)||(user.equals(userID))); // if the the target user is followed or is himself
-		File folder = new File("." + File.separator + "data"+ File.separator + userID + File.separator + "photos");
-
-		File[] list = folder.listFiles();
-		for(int i =0;i<list.length;i++){
-			SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-			outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
-			outStream.writeObject(true);
-		}
-		outStream.writeObject("No more photos");
-		outStream.writeObject(false);
-	}
-	
-	
-	
-
 }

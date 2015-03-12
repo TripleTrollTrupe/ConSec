@@ -116,19 +116,10 @@ public class PhotoShareClient {
 						break;
 
 					case "-g":
-						outStream.writeObject("-g");
-						outStream.writeObject(optionArgs[5]);
-						//Recebe falha
-						if(inStream.readObject() == new Boolean("false")){
-							System.out.println("Error in getting files");
-						}
-						//ciclo que recebe
-						else{
-							while(!(inStream.readObject() == new Boolean("true")))
-									receiveFile(inStream, outStream,userID);
-						}
-						
-						
+						if(getUserData(inStream, outStream, optionArgs[1]))
+							System.out.println("User " + optionArgs[1] + " data successfully copied from server");
+						else
+							System.out.println("Must be subscribed to user " + optionArgs[1] + "!");
 						break;
 
 					case "-c":
@@ -160,8 +151,8 @@ public class PhotoShareClient {
 
 					case "-n":
 						outStream.writeObject("-n");
-						//TODO: receber as cenas do servidor too layzee ATM sry
-						System.out.println("end of execution");
+						// TODO
+						break;
 					}
 				} else
 					System.out.println("Authentication failed!");
@@ -237,8 +228,43 @@ public class PhotoShareClient {
 
 	}
 	
+	private boolean getUserData(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException {
+		
+		outStream.writeObject("-g");
+		outStream.writeObject(user);
+		
+		if(!(Boolean)inStream.readObject())
+			return false;
+		
+		boolean receiving = true;
+		
+		while(receiving){
+			switch((String)inStream.readObject()){
+			case "-p":
+				receiveFile(inStream, outStream, user, "photos");
+				break;
+			case "-t":
+				receiving = false;
+				break;
+			}
+		}
+		receiving = true;
+		
+		while(receiving){
+			switch((String)inStream.readObject()){
+			case "-p":
+				receiveFile(inStream, outStream, user, "comments");
+				break;
+			case "-t":
+				receiving = false;
+				break;
+			}
+		}
+		return true;
+	}
+
 	// receive a file from inStream, receives size first and then the bytes
-	private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException {
+	private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user, String dir) throws IOException {
 
 		FileOutputStream fos = null;
 
@@ -258,26 +284,18 @@ public class PhotoShareClient {
 			System.out.println(filename);
 
 			// create file and directories if non existing TODO Change if necessary
-			Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
-			File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
+			Path fpath = Paths.get("." + File.separator + user + File.separator + dir + File.separator + filename);
+			File f = new File("." + File.separator + user + File.separator + dir + File.separator + filename);
 			if(!f.exists()){
 				Files.createDirectories(fpath.getParent());
 				f.createNewFile();
 			}
-			else{
-				System.out.println("Already existing file!");
-				outStream.writeObject(new Boolean(false));
-				return false;
-			}
 
-			outStream.writeObject(new Boolean(true));
+			outStream.writeObject(true);
 
 			byte[] fileByteBuf = new byte[1024];
 			int bytesRead = 0; // bytes jah lidos
 			fos = new FileOutputStream(f);
-
-			// TODO display dynamic progress
-			// int lastLineLength = 0;
 
 			while (bytesRead < size) {	
 				int count = inStream.read(fileByteBuf, 0, 1024);
@@ -288,27 +306,14 @@ public class PhotoShareClient {
 
 				fos.write(fileByteBuf, 0, count);
 				bytesRead += count;
-
-				/* TODO display dynamic progress
-				lastLineLength = ("total received: " + bytesRead + " out of " + size).length();
-
-				for(int i = 0; i < lastLineLength; i++)
-					System.out.print("\b");
-
-					// UNCOMMENT BELOW
-				System.out.print("total received: " + bytesRead + " out of " + size);
-				 */
-
 			}
-			//System.out.println();
 			System.out.println("File transfer completed!");
 
 		} finally {
 			if(fos != null)
 				fos.close();
 		}
-
 		return true;
 	}
-	
+
 }
