@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -110,6 +112,26 @@ public class PhotoShareServer {
 							working = receiveFile(inStream, outStream, user);
 							break;
 
+						case "-c":
+							String comment = "";
+							String userID = "";
+							String filename = "";
+
+							comment = (String) inStream.readObject();
+							userID = (String) inStream.readObject();
+							filename = (String) inStream.readObject();
+
+							// output operation outcome 
+							outStream.writeObject(comment(user, comment, userID, filename));
+
+							break;
+
+						case "-f":
+
+							String subscribingUser = (String) inStream.readObject();
+							outStream.writeObject(follow(subscribingUser, user));
+							break;
+
 						case "-t":
 							System.out.println("Finished processing user " + user + " request");
 							working = false;
@@ -126,6 +148,8 @@ public class PhotoShareServer {
 
 				socket.close();
 
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -142,7 +166,7 @@ public class PhotoShareServer {
 
 				String line;
 				while((line = br.readLine()) != null && !auth){
-					auth = (user + ":" + passwd).equalsIgnoreCase(line);
+					auth = (user + ":" + passwd).equals(line);
 				}
 				outStream.writeObject(new Boolean(auth));
 			}
@@ -172,8 +196,8 @@ public class PhotoShareServer {
 				System.out.println(filename);
 
 				// create file and directories if non existing
-				Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + filename);
-				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + filename);
+				Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
+				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
 				if(!f.exists()){
 					Files.createDirectories(fpath.getParent());
 					f.createNewFile();
@@ -183,7 +207,7 @@ public class PhotoShareServer {
 					outStream.writeObject(new Boolean(false));
 					return false;
 				}
-				
+
 				outStream.writeObject(new Boolean(true));
 
 				byte[] fileByteBuf = new byte[1024];
@@ -225,6 +249,76 @@ public class PhotoShareServer {
 			return true;
 		}
 
+		private boolean follows(String user, String userID) throws IOException {
 
+			File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions");
+
+			if(!f.exists())
+				return false;
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+			boolean follows = false;
+
+			String line;
+			while((line = br.readLine()) != null && !follows){
+				follows = (userID).equals(line);
+			}
+			br.close();
+
+			return follows;
+		}
+
+		private boolean comment(String user, String comment, String userID, String filename) throws IOException{
+
+			// create file (and directories) if non existing
+			File f = new File("." + File.separator + "data" + File.separator + userID + File.separator + "photos" + File.separator + filename);
+			File fc = new File("." + File.separator + "data" + File.separator + userID + File.separator + "comments" + File.separator + filename + ".comment");
+			Path fpath = Paths.get("." + File.separator + "data" + File.separator + userID + File.separator + "comments" + File.separator + filename);
+
+			if(f.exists() && follows(user, userID)){
+				if(!fc.exists()){
+					Files.createDirectories(fpath.getParent());
+					fc.createNewFile();
+				}
+
+				BufferedWriter bw = new BufferedWriter( new FileWriter(fc,true));
+				bw.write(user + ": " + comment + "\r\n");
+				bw.close();
+
+				return true;
+			}
+			else
+				return false;
+
+		}
+
+		// set userID to follow user
+		private boolean follow(String userID, String user) throws IOException {
+
+			if(!userExists(userID) || follows(userID,user))
+				return false;
+
+			File f = new File("." + File.separator + "data" + File.separator + userID + File.separator + "subscriptions");
+
+			if(!f.exists())
+				f.createNewFile();
+
+			BufferedWriter bw = new BufferedWriter( new FileWriter(f,true));
+			bw.write(user + "\r\n");
+			bw.newLine();
+			bw.flush();
+			bw.close();
+
+			return true;
+		}
+
+		private boolean userExists(String userID){
+			File f = new File("." + File.separator + "data" + File.separator + userID);
+
+			if(f.exists() && f.isDirectory())
+				return true;
+			else
+				return false;
+		}
 	}
 }

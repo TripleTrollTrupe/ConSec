@@ -121,16 +121,29 @@ public class PhotoShareClient {
 
 					case "-c":
 						outStream.writeObject("-c");
-						outStream.writeObject(optionArgs[5]);
-						outStream.writeObject(optionArgs[6]);
-						outStream.writeObject(optionArgs[7]);
-						System.out.println("end of execution");
+						outStream.writeObject(optionArgs[1]);
+						outStream.writeObject(optionArgs[2]);
+						outStream.writeObject(optionArgs[3]);
+						if((Boolean)inStream.readObject())
+							System.out.println("Commented successfully");
+						else
+							System.out.println("Comment failed, target photo's owner is not followed by this user!");
 						break;
 
 					case "-f":
-						outStream.writeObject("-f");
-						outStream.writeObject(optionArgs[5]);
-						System.out.println("end of execution");
+						for(int i = 1; i < optionArgs.length; i++){
+							if(userID.equals(optionArgs[i]))
+								System.out.println("User cannot follow himself/herself!");
+							else{
+								outStream.writeObject("-f");
+								outStream.writeObject(optionArgs[i]);
+								if((Boolean)inStream.readObject())
+									System.out.println("User " + optionArgs[i] + " subscribed " + userID + " with success");
+								else
+									System.out.println("User " + optionArgs[i] + " is non existent or already subscribed!");
+							}
+						}
+
 						break;
 
 					case "-n":
@@ -139,7 +152,7 @@ public class PhotoShareClient {
 						System.out.println("end of execution");
 					}
 				} else
-					System.out.println("Authentication failed");
+					System.out.println("Authentication failed!");
 			} catch (FileNotFoundException e) {
 				System.out.println("File not found!");
 			} catch (IOException e) {
