@@ -196,7 +196,7 @@ public class PhotoShareClient {
 	private void getPhotoInfo(ObjectOutputStream outStream, ObjectInputStream inStream, String userId) throws IOException, ClassNotFoundException{
 		boolean keepReading = true;
 
-		outStream.writeObject("-p");
+		outStream.writeObject("-l");
 		outStream.writeObject(userId);
 		if(!(Boolean)inStream.readObject()){ // se nao pertencer ou nao existir
 			System.out.println("Not an existing or subscribed user");
