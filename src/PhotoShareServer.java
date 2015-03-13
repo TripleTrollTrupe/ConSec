@@ -392,7 +392,11 @@ public class PhotoShareServer {
 
 			String userID = (String) inStream.readObject();
 
-			outStream.writeObject(follows(user,userID)||(user.equals(userID))); // if the the target user is followed or is himself
+			if(!(follows(user,userID)||(user.equals(userID)))){
+				System.out.println("User does not exist or is not followed");
+				return;
+			}
+			outStream.writeObject(true); // if the the target user is followed or is himself
 			File folder = new File("." + File.separator + "data"+ File.separator + userID + File.separator + "photos");
 
 			File[] list = folder.listFiles();
