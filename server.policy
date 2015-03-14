@@ -1,0 +1,5 @@
+grant { // para o server
+	permission java.net.SocketPermission "*:23456","listen";
+	permission java.net.SocketPermission "*:23457-","accept";
+	permission java.io.FilePermission "-" , "read,write,execute";
+};
