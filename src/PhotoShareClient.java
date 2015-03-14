@@ -150,8 +150,7 @@ public class PhotoShareClient {
 						break;
 
 					case "-n":
-						outStream.writeObject("-n");
-						// TODO
+						getSubsLatest(inStream, outStream);
 						break;
 					}
 				} else
@@ -227,17 +226,17 @@ public class PhotoShareClient {
 
 
 	}
-	
+
 	private boolean getUserData(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException {
-		
+
 		outStream.writeObject("-g");
 		outStream.writeObject(user);
-		
+
 		if(!(Boolean)inStream.readObject())
 			return false;
-		
+
 		boolean receiving = true;
-		
+
 		while(receiving){
 			switch((String)inStream.readObject()){
 			case "-p":
@@ -249,7 +248,7 @@ public class PhotoShareClient {
 			}
 		}
 		receiving = true;
-		
+
 		while(receiving){
 			switch((String)inStream.readObject()){
 			case "-p":
@@ -258,6 +257,36 @@ public class PhotoShareClient {
 			case "-t":
 				receiving = false;
 				break;
+			}
+		}
+		return true;
+	}
+
+	private boolean getSubsLatest(ObjectInputStream inStream, ObjectOutputStream outStream) throws IOException, ClassNotFoundException {
+
+		outStream.writeObject("-n");
+
+		boolean receiving = (Boolean)inStream.readObject();
+		String received = "";
+		String currentUser = "Wrong_user";
+
+		if(!receiving)
+			return false;
+
+		while(receiving){
+			switch((received = (String)inStream.readObject())){
+			case "-p":
+				receiveFile(inStream, outStream, currentUser, "photos");
+				break;
+			case "-c":
+				inStream.readObject(); //consume "-p"
+				receiveFile(inStream, outStream, currentUser, "comments");
+				break;
+			case "-t":
+				receiving = false;
+				break;
+			default:
+				currentUser = received;
 			}
 		}
 		return true;

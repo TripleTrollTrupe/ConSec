@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -125,31 +127,38 @@ public class PhotoShareServer {
 
 						case "-c":
 							String comment = "";
-							String commentingUser = "";
+							String commentTargetUser = "";
 							String filename = "";
 
 							comment = (String) inStream.readObject();
-							commentingUser = (String) inStream.readObject();
+							commentTargetUser = (String) inStream.readObject();
 							filename = (String) inStream.readObject();
 
 							// output operation outcome 
-							outStream.writeObject(comment(user, comment, commentingUser, filename));
+							outStream.writeObject(comment(user, comment, commentTargetUser, filename));
 
 							break;
 
 						case "-f":
-
 							String subscribingUser = (String) inStream.readObject();
 							outStream.writeObject(follow(subscribingUser, user));
+							break;
+
+						case "-n":
+							getSubsLatest(outStream, inStream, user);
 							break;
 
 						case "-t":
 							System.out.println("Finished processing user " + user + " request");
 							working = false;
 							break;
+
+						default:
+							System.out.println("Invalid request!");
+							working = false;
+							break;
 						}
 					}
-					System.out.println("thread: dead");
 				} else
 					System.out.println("Invalid Credentials!");
 
@@ -158,6 +167,8 @@ public class PhotoShareServer {
 				inStream.close();
 
 				socket.close();
+
+				System.out.println("thread: dead");
 
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
@@ -407,6 +418,73 @@ public class PhotoShareServer {
 			}
 			outStream.writeObject("No more photos");
 			outStream.writeObject(false);
+		}
+
+		private void getSubsLatest(ObjectOutputStream outStream, ObjectInputStream inStream, String user) throws IOException, ClassNotFoundException {
+
+			ArrayList<String> subs = subs(user);
+
+			if(!subs.isEmpty()){
+				outStream.writeObject(true);
+				for(String subbedUser : subs){
+					outStream.writeObject(subbedUser);
+
+					File photo = lastFileModified("." + File.separator + "data"+ File.separator + subbedUser + File.separator + "photos");
+					if(photo != null){
+						sendFile(outStream, inStream, "." + File.separator + "data"+ File.separator + subbedUser +
+								File.separator + "photos" + File.separator + photo.getName());
+
+						File comment = new File("." + File.separator + "data" + File.separator + subbedUser +
+								File.separator + "comments" + File.separator + photo.getName() + ".comment");
+
+						if(comment.exists() && !comment.isDirectory()){
+							outStream.writeObject("-c");
+							sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subbedUser +
+									File.separator + "comments" + File.separator + photo.getName() + ".comment");
+						}
+					}
+				}
+				outStream.writeObject("-t");
+			} else
+				outStream.writeObject(false);
+		}
+
+		private ArrayList<String> subs(String user) throws IOException {
+
+			ArrayList<String> subList = new ArrayList<String>();
+
+			File subFile = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions");
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(subFile)));
+
+			if (user.length() != 0){
+
+				String line;
+				while((line = br.readLine()) != null){
+					subList.add(line);
+				}
+			}
+			br.close();
+
+			return subList;
+		};
+
+		private File lastFileModified(String dir) {
+			File fl = new File(dir);
+			File[] files = fl.listFiles(new FileFilter() {          
+				public boolean accept(File file) {
+					return file.isFile();
+				}
+			});
+			long lastMod = Long.MIN_VALUE;
+			File choice = null;
+			if(files != null)
+				for (File file : files) {
+					if (file.lastModified() > lastMod) {
+						choice = file;
+						lastMod = file.lastModified();
+					}
+				}
+			return choice;
 		}
 	}
 }
