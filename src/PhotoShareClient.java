@@ -13,6 +13,14 @@ import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+/**
+ * PhotoShareClient
+ * @author SC001
+ * @author fc41935 - Paulo Antunes
+ * @author fc43273 - Ricardo Costa
+ * @author fc44223 - Henrique Mendes
+ * Class that runs the client for the PhotoShare application
+ */
 public class PhotoShareClient {
 
 	public static void main(String[] args) {
@@ -61,6 +69,14 @@ public class PhotoShareClient {
 		}
 	}
 
+
+	/**
+	 * @param server - IP of the server to connect to
+	 * @param port   - port to establish connection
+	 * @param userID - ID that represents current user
+	 * @param optionArgs - arguments from the console, relative to operations
+	 * Starts up the connection and executes the operations specified in the console parameters
+	 */
 	public void startClient(String server, int port, String userID, String [] optionArgs) {
 
 		Socket soc = null;
@@ -178,6 +194,15 @@ public class PhotoShareClient {
 		System.out.println("end of execution");
 	}
 
+	/**
+	 * @param outStream - Stream used to send objects to server
+	 * @param inStream  - Stream used to receive objects from server
+	 * @param file      - File to send to the server
+	 * @return true - if there is no error during the operation / false - if an error interrupts the operation
+	 * @throws IOException - If there's an unexpected issue with outStream
+	 * @throws ClassNotFoundException - If there's an unexpected issue with inStream
+	 * Sends files to the connnected server, sends size first, then file name and finally sends the bytes of the file
+	 */
 	private boolean sendFile(ObjectOutputStream outStream, ObjectInputStream inStream, String file) throws IOException, ClassNotFoundException {
 
 		boolean noError = true;
@@ -210,12 +235,20 @@ public class PhotoShareClient {
 		return noError;
 	}
 
+	/**
+	 * @param outStream - Stream used to send objects to server
+	 * @param inStream  - Stream used to receive objects from server
+	 * @param userId    - User to get information from
+	 * @throws IOException - If there's an unexpected issue with outStream
+	 * @throws ClassNotFoundException - If there's an unexpected issue with inStream
+	 * Requests information about the activity of a certain user
+	 */
 	private void getPhotoInfo(ObjectOutputStream outStream, ObjectInputStream inStream, String userId) throws IOException, ClassNotFoundException{
 		boolean keepReading = true;
 
 		outStream.writeObject("-l");
 		outStream.writeObject(userId);
-		if(!(Boolean)inStream.readObject()){ // se nao pertencer ou nao existir
+		if(!(Boolean)inStream.readObject()){ // if user doens't exist or is not subscribed to
 			System.out.println("Not an existing or subscribed user");
 			return; // nothing else to do, exits method
 		}
@@ -227,6 +260,14 @@ public class PhotoShareClient {
 
 	}
 
+	/**
+	 * @param inStream  - Stream used to receive objects from server
+	 * @param outStream - Stream used to send objects to server
+	 * @param user      - User to get data from
+	 * @throws IOException - If there's an unexpected issue with outStream
+	 * @throws ClassNotFoundException - If there's an unexpected issue with inStream
+	 * Requests a copy of the user's photos
+	 */
 	private boolean getUserData(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException {
 
 		outStream.writeObject("-g");
@@ -262,6 +303,14 @@ public class PhotoShareClient {
 		return true;
 	}
 
+	/**
+	 * @param inStream  - Stream used to receive objects from server
+	 * @param outStream - Stream used to send objects to server
+	 * @return true - if operation is succesful / false - if the operation is interrupted
+	 * @throws IOException - If there's an unexpected issue with outStream
+	 * @throws ClassNotFoundException - If there's an unexpected issue with inStream
+	 * Requests latest activity from each of the users subscribed to
+	 */
 	private boolean getSubsLatest(ObjectInputStream inStream, ObjectOutputStream outStream) throws IOException, ClassNotFoundException {
 
 		outStream.writeObject("-n");
@@ -292,8 +341,17 @@ public class PhotoShareClient {
 		return true;
 	}
 
-	// receive a file from inStream, receives size first and then the bytes
-	private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user, String dir) throws IOException {
+	/**
+	 * @param inStream  - Stream used to receive objects from server
+	 * @param outStream - Stream used to send objects to server
+	 * @param user      - ID of the current user
+	 * @param dir       - Directory in which the files are to be saved
+	 * @return true - if operation is successful / false - if the operation is interrupted
+	 * @throws IOException - If there's an unexpected issue with outStream
+	 * @throws ClassNotFoundException - If there's an unexpected issue with inStream
+	 * Receives files sent from the server, receives size first, then procedes to receive the bytes of the file
+	 */
+	private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user, String dir) throws IOException, ClassNotFoundException {
 
 		FileOutputStream fos = null;
 
@@ -301,12 +359,10 @@ public class PhotoShareClient {
 			int size = 0;
 			String filename = "";
 
-			try {
+
 				size = (Integer) inStream.readObject();
 				filename = (String) inStream.readObject();
-			} catch (ClassNotFoundException e1) {
-				e1.printStackTrace();
-			}		
+		
 
 
 			System.out.println("--> " + size);
