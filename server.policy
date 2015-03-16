@@ -1,5 +1,6 @@
 grant { // para o server
 	permission java.net.SocketPermission "*:23456","listen";
-	permission java.net.SocketPermission "*:23457-","accept";
-	permission java.io.FilePermission "-" , "read,write,execute";
+	permission java.net.SocketPermission "*:*","accept";
+	permission java.io.FilePermission "shadow${/}up" , "read";
+	permission java.io.FilePermission "data${/}-" , "read,write";
 };

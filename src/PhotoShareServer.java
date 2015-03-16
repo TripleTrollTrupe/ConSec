@@ -134,9 +134,8 @@ public class PhotoShareServer {
 							commentTargetUser = (String) inStream.readObject();
 							filename = (String) inStream.readObject();
 
-							// output operation outcome 
+							// output operation outcome to client 
 							outStream.writeObject(comment(user, comment, commentTargetUser, filename));
-
 							break;
 
 						case "-f":
@@ -165,9 +164,7 @@ public class PhotoShareServer {
 
 				outStream.close();
 				inStream.close();
-
 				socket.close();
-
 				System.out.println("thread: dead");
 
 			} catch (ClassNotFoundException e) {
@@ -242,7 +239,6 @@ public class PhotoShareServer {
 						throw new IOException("Expected file size: " + size
 								+ "\nRead size: " + bytesRead);
 					}
-
 					fos.write(fileByteBuf, 0, count);
 					bytesRead += count;
 
@@ -253,7 +249,6 @@ public class PhotoShareServer {
 				if(fos != null)
 					fos.close();
 			}
-
 			return true;
 		}
 
@@ -392,14 +387,12 @@ public class PhotoShareServer {
 				System.out.println("File transfer completed!");
 				fin.close();
 			}
-
 			return noError;
 		}
 
 
 		//get all comments from a certain subscriber
 		private void fetchPhotoInfo(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException{
-
 
 			String userID = (String) inStream.readObject();
 
@@ -466,7 +459,7 @@ public class PhotoShareServer {
 			br.close();
 
 			return subList;
-		};
+		}
 
 		private File lastFileModified(String dir) {
 			File fl = new File(dir);

@@ -162,7 +162,6 @@ public class PhotoShareClient {
 									System.out.println("User " + optionArgs[i] + " is non existent or already subscribed!");
 							}
 						}
-
 						break;
 
 					case "-n":
@@ -250,14 +249,12 @@ public class PhotoShareClient {
 		outStream.writeObject(userId);
 		if(!(Boolean)inStream.readObject()){ // if user doens't exist or is not subscribed to
 			System.out.println("Not an existing or subscribed user");
-			return; // nothing else to do, exits method
+			keepReading = false;
 		}
 		while(keepReading){
 			System.out.println((String) inStream.readObject()); // prints date and photo name
 			keepReading= (Boolean) inStream.readObject(); // checks if there still is info to receive
 		}
-
-
 	}
 
 	/**
@@ -278,6 +275,7 @@ public class PhotoShareClient {
 
 		boolean receiving = true;
 
+		// receive photos
 		while(receiving){
 			switch((String)inStream.readObject()){
 			case "-p":
@@ -288,8 +286,9 @@ public class PhotoShareClient {
 				break;
 			}
 		}
+		
+		// receive comments
 		receiving = true;
-
 		while(receiving){
 			switch((String)inStream.readObject()){
 			case "-p":
@@ -316,11 +315,12 @@ public class PhotoShareClient {
 		outStream.writeObject("-n");
 
 		boolean receiving = (Boolean)inStream.readObject();
-		String received = "";
-		String currentUser = "Wrong_user";
 
 		if(!receiving)
 			return false;
+		
+		String received = "";
+		String currentUser = "";
 
 		while(receiving){
 			switch((received = (String)inStream.readObject())){
@@ -328,7 +328,7 @@ public class PhotoShareClient {
 				receiveFile(inStream, outStream, currentUser, "photos");
 				break;
 			case "-c":
-				inStream.readObject(); //consume "-p"
+				inStream.readObject(); //consume "-p" of the sendFile method
 				receiveFile(inStream, outStream, currentUser, "comments");
 				break;
 			case "-t":
@@ -400,5 +400,4 @@ public class PhotoShareClient {
 		}
 		return true;
 	}
-
 }
