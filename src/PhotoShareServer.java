@@ -30,9 +30,9 @@ import java.util.concurrent.Executors;
 public class PhotoShareServer {
 
 	// the port running the listening socket
-	protected int serverPort;
+	private int serverPort;
 	// the size of the thread pool
-	protected int tpSize;
+	private int tpSize;
 
 	// Starts the server with listening socket on port specified by first argument and thread pool size 20
 	// and runs it
