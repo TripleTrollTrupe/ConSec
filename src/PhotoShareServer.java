@@ -267,8 +267,8 @@ public class PhotoShareServer {
 				Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
 				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
 
-				// check if there's already a photo with the same name owned by the same user
-				if(!f.exists()){
+				// check if there's already a photo with the same name owned by the same user or if empty file
+				if(!f.exists() && size != 0){
 					// create file and directories if non existing
 					Files.createDirectories(fpath.getParent());
 					f.createNewFile();

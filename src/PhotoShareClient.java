@@ -29,14 +29,8 @@ public class PhotoShareClient {
 
 		boolean validInput = true;
 
-		// TODO arg testing code
-		System.out.println("args:");
-		for(int jk = 0; jk < args.length; jk++)
-			System.out.print(jk + " " + args[jk] +" ");
-		System.out.println();
-
 		// verify input
-		if(!args[0].equals("-u") || !args[2].equals("-a")){
+		if(!args[0].equals("-u") || !args[2].equals("-a") || !args[3].contains(":")){
 			System.out.println("Incorrect arguments!");
 			validInput = false;
 		}
@@ -48,8 +42,11 @@ public class PhotoShareClient {
 			System.out.println("Invalid port format!");
 			validInput = false;
 		}
+		
+		int port = 0;
 
-		int port = Integer.parseInt(serverAddress[1]);
+		if(validInput)
+			port = Integer.parseInt(serverAddress[1]);
 
 		if(validInput && port!=23456){
 			System.out.println("Invalid port!");
@@ -123,7 +120,7 @@ public class PhotoShareClient {
 							noError = sendFile(outStream, inStream, optionArgs[i]);
 						}
 						if(!noError)
-							System.out.println("File already exists in server!");
+							System.out.println("File already exists in server or is empty!");
 						break;
 
 					case "-l":
@@ -368,7 +365,7 @@ public class PhotoShareClient {
 			System.out.println("--> " + size);
 			System.out.println(filename);
 
-			// create file and directories if non existing TODO Change if necessary
+			// create file and directories if non existing
 			Path fpath = Paths.get("." + File.separator + user + File.separator + dir + File.separator + filename);
 			File f = new File("." + File.separator + user + File.separator + dir + File.separator + filename);
 			if(!f.exists()){
