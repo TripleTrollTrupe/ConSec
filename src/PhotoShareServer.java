@@ -584,7 +584,8 @@ public class PhotoShareServer {
 
 				String line;
 				while((line = br.readLine()) != null){
-					subList.add(line);
+					if(!line.isEmpty())
+						subList.add(line);
 				}
 			}
 			br.close();
@@ -600,7 +601,8 @@ public class PhotoShareServer {
 		private File lastFileModified(String dir) {
 			File fl = new File(dir);
 
-			if(!fl.isDirectory()){
+			if(fl.isDirectory()){
+				System.out.println("here");
 				File[] files = fl.listFiles(new FileFilter() {          
 					public boolean accept(File file) {
 						return file.isFile();
