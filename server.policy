@@ -1,6 +1,6 @@
 grant codeBase "file:bin${/}-"{ // para o server
 	permission java.net.SocketPermission "*:23456","listen";
-	permission java.net.SocketPermission "*:*","accept";
+	permission java.net.SocketPermission "*:1024-","accept"; // 1-1023 are reserved for other uses
 	permission java.io.FilePermission "shadow${/}up" , "read";
 	permission java.io.FilePermission ".${/}data${/}-" , "read,write";
 	permission java.io.FilePermission ".${/}data" , "read,write";
