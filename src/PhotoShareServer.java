@@ -514,19 +514,20 @@ public class PhotoShareServer {
 			if(!(follows(followingUser,followedUser)||(followingUser.equals(followedUser)))){
 				System.out.println("User does not exist or is not followed");
 				outStream.writeObject(false);
-				return;
 			}
-			outStream.writeObject(true); // if the the target user is followed or is himself
-			File folder = new File("." + File.separator + "data"+ File.separator + followedUser + File.separator + "photos");
+			else{
+				outStream.writeObject(true); // if the the target user is followed or is himself
+				File folder = new File("." + File.separator + "data"+ File.separator + followedUser + File.separator + "photos");
 
-			File[] list = folder.listFiles();
-			for(int i =0;i<list.length;i++){
-				SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-				outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
-				outStream.writeObject(true);
+				File[] list = folder.listFiles();
+				for(int i =0;i<list.length;i++){
+					SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+					outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
+					outStream.writeObject(true);
+				}
+				outStream.writeObject("No more photos");
+				outStream.writeObject(false);
 			}
-			outStream.writeObject("No more photos");
-			outStream.writeObject(false);
 		}
 
 		/**
