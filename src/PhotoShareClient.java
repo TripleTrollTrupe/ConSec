@@ -42,7 +42,7 @@ public class PhotoShareClient {
 			System.out.println("Invalid port format!");
 			validInput = false;
 		}
-		
+
 		int port = 0;
 
 		if(validInput)
@@ -283,7 +283,7 @@ public class PhotoShareClient {
 				break;
 			}
 		}
-		
+
 		// receive comments
 		receiving = true;
 		while(receiving){
@@ -315,7 +315,7 @@ public class PhotoShareClient {
 
 		if(!receiving)
 			return false;
-		
+
 		String received = "";
 		String currentUser = "";
 
@@ -357,9 +357,9 @@ public class PhotoShareClient {
 			String filename = "";
 
 
-				size = (Integer) inStream.readObject();
-				filename = (String) inStream.readObject();
-		
+			size = (Integer) inStream.readObject();
+			filename = (String) inStream.readObject();
+
 
 
 			System.out.println("--> " + size);
