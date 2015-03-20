@@ -162,7 +162,10 @@ public class PhotoShareClient {
 						break;
 
 					case "-n":
-						getSubsLatest(inStream, outStream);
+						if(getSubsLatest(inStream, outStream))
+							System.out.println("All latest photos and comments from followed users received");
+						else
+							System.out.println("User " + userID + " isn't following anyone!");
 						break;
 					}
 				} else
