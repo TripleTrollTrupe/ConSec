@@ -4,4 +4,5 @@ grant codeBase "file:bin${/}-"{ // para o server
 	permission java.io.FilePermission "shadow${/}up" , "read";
 	permission java.io.FilePermission ".${/}data${/}-" , "read,write";
 	permission java.io.FilePermission ".${/}data" , "read,write";
+	permission java.io.FilePermission ".${/}" , "read,write";
 };
