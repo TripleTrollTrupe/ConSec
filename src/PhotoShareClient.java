@@ -113,7 +113,7 @@ public class PhotoShareClient {
 					switch(optionArgs[0]){
 
 					case "-p": 
-						
+
 						if(optionArgs.length >= 2){
 							boolean noError = true;
 

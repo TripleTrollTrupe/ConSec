@@ -577,10 +577,10 @@ public class PhotoShareServer {
 		private ArrayList<String> subs(String followingUser) throws IOException {
 
 			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
-			
+
 			if(!subFile.exists())
 				return null;                                                            
-			
+
 			ArrayList<String> subList = new ArrayList<String>();
 
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(subFile)));
