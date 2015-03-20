@@ -114,51 +114,72 @@ public class PhotoShareClient {
 
 					case "-p": 
 
-						boolean noError = true;
+						if(optionArgs.length >= 2){
+							boolean noError = true;
 
-						for(int i = 1; i < optionArgs.length && noError; i++){
-							noError = sendFile(outStream, inStream, optionArgs[i]);
+							for(int i = 1; i < optionArgs.length && noError; i++){
+								noError = sendFile(outStream, inStream, optionArgs[i]);
+							}
+							if(!noError)
+								System.out.println("File already exists in server or is empty!");
 						}
-						if(!noError)
-							System.out.println("File already exists in server or is empty!");
+						else
+							System.out.println("Insufficient arguments!");
 						break;
 
 					case "-l":
 
-						getPhotoInfo(outStream,inStream,optionArgs[1]);
+						if(optionArgs.length >= 2)
+							getPhotoInfo(outStream,inStream,optionArgs[1]);
+						else
+							System.out.println("Insufficient arguments!");
 						break;
 
 					case "-g":
-						if(getUserData(inStream, outStream, optionArgs[1]))
-							System.out.println("User " + optionArgs[1] + " data successfully copied from server");
+
+						if(optionArgs.length >= 2){
+							if(getUserData(inStream, outStream, optionArgs[1]))
+								System.out.println("User " + optionArgs[1] + " data successfully copied from server");
+							else
+								System.out.println("Must be subscribed to user " + optionArgs[1] + "!");
+						}
 						else
-							System.out.println("Must be subscribed to user " + optionArgs[1] + "!");
+							System.out.println("Insufficient arguments!");
 						break;
 
 					case "-c":
-						outStream.writeObject("-c");
-						outStream.writeObject(optionArgs[1]);
-						outStream.writeObject(optionArgs[2]);
-						outStream.writeObject(optionArgs[3]);
-						if((Boolean)inStream.readObject())
-							System.out.println("Commented successfully");
+
+						if(optionArgs.length >= 4){
+							outStream.writeObject("-c");
+							outStream.writeObject(optionArgs[1]);
+							outStream.writeObject(optionArgs[2]);
+							outStream.writeObject(optionArgs[3]);
+							if((Boolean)inStream.readObject())
+								System.out.println("Commented successfully");
+							else
+								System.out.println("Comment failed, target photo's owner is not followed by this user!");
+						}
 						else
-							System.out.println("Comment failed, target photo's owner is not followed by this user!");
+							System.out.println("Insufficient arguments!");
 						break;
 
 					case "-f":
-						for(int i = 1; i < optionArgs.length; i++){
-							if(userID.equals(optionArgs[i]))
-								System.out.println("User cannot follow himself/herself!");
-							else{
-								outStream.writeObject("-f");
-								outStream.writeObject(optionArgs[i]);
-								if((Boolean)inStream.readObject())
-									System.out.println("User " + optionArgs[i] + " subscribed " + userID + " with success");
-								else
-									System.out.println("User " + optionArgs[i] + " is non existent or already subscribed!");
+						if(optionArgs.length >= 2){
+							for(int i = 1; i < optionArgs.length; i++){
+								if(userID.equals(optionArgs[i]))
+									System.out.println("User cannot follow himself/herself!");
+								else{
+									outStream.writeObject("-f");
+									outStream.writeObject(optionArgs[i]);
+									if((Boolean)inStream.readObject())
+										System.out.println("User " + optionArgs[i] + " subscribed " + userID + " with success");
+									else
+										System.out.println("User " + optionArgs[i] + " is non existent or already subscribed!");
+								}
 							}
 						}
+						else
+							System.out.println("Insufficient arguments!");
 						break;
 
 					case "-n":
