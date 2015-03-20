@@ -1,8 +1,8 @@
-grant codeBase "file:bin${/}-"{ // para o server
-	permission java.net.SocketPermission "*:23456","listen";
+grant codeBase "file:bin${/}-"{
+	permission java.net.SocketPermission "*:23456","listen"; // to listen for new connections
 	permission java.net.SocketPermission "*:1024-","accept"; // 1-1023 are reserved for other uses
-	permission java.io.FilePermission "shadow${/}up" , "read";
-	permission java.io.FilePermission ".${/}data${/}-" , "read,write";
-	permission java.io.FilePermission ".${/}data" , "read,write";
-	permission java.io.FilePermission ".${/}" , "read,write";
+	permission java.io.FilePermission "shadow${/}up" , "read"; // to check users and passwords
+	permission java.io.FilePermission ".${/}data${/}-" , "read,write"; // to write and read files to user space
+	permission java.io.FilePermission ".${/}data" , "read,write"; // to check/create user folders if non existent
+	permission java.io.FilePermission ".${/}" , "read,write"; // to check/create data folder if non existent
 };
