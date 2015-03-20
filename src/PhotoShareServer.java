@@ -347,7 +347,7 @@ public class PhotoShareServer {
 			File fc = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "comments" + File.separator + filename + ".comment");
 			Path fpath = Paths.get("." + File.separator + "data" + File.separator + followedUser + File.separator + "comments" + File.separator + filename);
 
-			if(f.exists() && follows(followingUser, followedUser)){
+			if(f.exists() && (follows(followingUser, followedUser) || followingUser.equals(followedUser))){
 				if(!fc.exists()){
 					Files.createDirectories(fpath.getParent());
 					fc.createNewFile();
@@ -542,7 +542,7 @@ public class PhotoShareServer {
 
 			ArrayList<String> subs = subs(user);
 
-			if(!subs.isEmpty()){
+			if(subs != null && !subs.isEmpty()){
 				outStream.writeObject(true);
 				for(String subbedUser : subs){
 					outStream.writeObject(subbedUser);
@@ -576,9 +576,13 @@ public class PhotoShareServer {
 		 */
 		private ArrayList<String> subs(String followingUser) throws IOException {
 
+			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
+			
+			if(!subFile.exists())
+				return null;                                                            
+			
 			ArrayList<String> subList = new ArrayList<String>();
 
-			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(subFile)));
 
 			if (followingUser.length() != 0){
