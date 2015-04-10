@@ -182,7 +182,7 @@ public class PhotoShareServer {
 
 						case "-f":
 							String subscribingUser = (String) inStream.readObject();
-							outStream.writeObject(follow(subscribingUser, user));
+							outStream.writeObject(UserHandler.subscribe(subscribingUser, user));
 							break;
 
 						case "-n":
@@ -304,57 +304,32 @@ public class PhotoShareServer {
 			return true;
 		}
 
-		/**
-		 * Checks if the a user follows another user.
-		 * @param followingUser the following user
-		 * @param followedUser the followed user
-		 * @return true if the followingUser is subscribed/follows the followedUser, false otherwise
-		 * @throws IOException
-		 */
-		private boolean follows(String followingUser, String followedUser) throws IOException {
-
-			File f = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
-
-			if(!f.exists())
-				return false;
-
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
-			boolean follows = false;
-
-			String line;
-			while((line = br.readLine()) != null && !follows){
-				follows = (followedUser).equals(line);
-			}
-			br.close();
-
-			return follows;
-		}
 
 		/**
 		 * Creates a comment for an existing photo from a user that follows the photo's owner.
-		 * @param followingUser the commenting user
+		 * @param subscribingUser the commenting user
 		 * @param comment the commenting user's comment
-		 * @param followedUser the photo's owner
+		 * @param subscribedUser the photo's owner
 		 * @param filename the photo's name
 		 * @return true if the comment is created successfully, false otherwise Note that for the comment operation
-		 * to be successful the photo must exist and follows(followingUser,followedUser) must be true
+		 * to be successful the photo must exist and follows(followingUser,subscribedUser) must be true
 		 * @throws IOException
 		 */
-		private boolean comment(String followingUser, String comment, String followedUser, String filename) throws IOException{
+		private boolean comment(String subscribingUser, String comment, String subscribedUser, String filename) throws IOException{
 
 			// create file (and directories) if non existing
-			File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "photos" + File.separator + filename);
-			File fc = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "comments" + File.separator + filename + ".comment");
-			Path fpath = Paths.get("." + File.separator + "data" + File.separator + followedUser + File.separator + "comments" + File.separator + filename);
+			File f = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "photos" + File.separator + filename);
+			File fc = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments" + File.separator + filename + ".comment");
+			Path fpath = Paths.get("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments" + File.separator + filename);
 
-			if(f.exists() && (follows(followingUser, followedUser) || followingUser.equals(followedUser))){
+			if(f.exists() && (UserHandler.isSubscribed(subscribingUser, subscribedUser) || subscribingUser.equals(subscribedUser))){
 				if(!fc.exists()){
 					Files.createDirectories(fpath.getParent());
 					fc.createNewFile();
 				}
 
 				BufferedWriter bw = new BufferedWriter( new FileWriter(fc,true));
-				bw.write(followingUser + ": " + comment + "\r\n");
+				bw.write(subscribingUser + ": " + comment + "\r\n");
 				bw.close();
 
 				return true;
@@ -365,95 +340,43 @@ public class PhotoShareServer {
 		}
 
 		/**
-		 * Sets a user to follow another user.
-		 * @param followingUser the user that is to follow
-		 * @param followedUser the user that is to be followed
-		 * @return true if followingUser is set to follow followedUser successfully, false otherwise
-		 * @throws IOException
-		 */
-		private boolean follow(String followingUser, String followedUser) throws IOException {
-
-			if(!userExists(followingUser) || follows(followingUser,followedUser))
-				return false;
-
-			File f = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
-			Path fpath = Paths.get("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
-
-			if(!f.exists()){
-				Files.createDirectories(fpath.getParent());
-				f.createNewFile();
-			}
-
-			BufferedWriter bw = new BufferedWriter( new FileWriter(f,true));
-			bw.write(followedUser + "\r\n");
-			bw.newLine();
-			bw.flush();
-			bw.close();
-
-			return true;
-		}
-
-		/**
-		 * Checks if a user exists.
-		 * @param userID the user to check
-		 * @return true if the user is registered in the system, false otherwise
-		 * @throws IOException 
-		 */
-		private boolean userExists(String userID) throws IOException{
-
-			File up = new File("." + File.separator + "shadow" + File.separator + "up");
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(up)));
-			boolean exists = false;
-
-			if (userID.length() != 0){
-				String line;
-				while((line = br.readLine()) != null && !exists){
-					exists = line.startsWith(userID + ":");
-				}
-			}
-			br.close();
-
-			return exists;
-		}
-
-		/**
 		 * Sends all photos and comments of a followed user.
 		 * @param followingUser the user wishing to download the data
-		 * @param followedUser the user that owns the information
+		 * @param subscribedUser the user that owns the information
 		 * @param outStream the ObjectOutputStream sending the data
 		 * @param inStream the ObjectInputStream used for validations while sending the data
 		 * @return true if the operation succeeds, false otherwise
 		 * @throws IOException
 		 * @throws ClassNotFoundException
 		 */
-		private boolean UpdateFollower(String followingUser,String followedUser,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException{
+		private boolean UpdateFollower(String followingUser,String subscribedUser,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException{
 
-			if(!userExists(followingUser) || !userExists(followedUser)){
+			if(!UserHandler.userExists(followingUser) || !UserHandler.userExists(subscribedUser)){
 				outStream.writeObject(false);
 				return false;
 			}
-			if(!follows(followingUser,followedUser) && !(followingUser.equals(followedUser))){
+			if(!UserHandler.isSubscribed(followingUser,subscribedUser) && !(followingUser.equals(subscribedUser))){
 				outStream.writeObject(false);
 				return false;
 			}
 			// validated operation, start sending
 			outStream.writeObject(true);
 
-			File photoDir =new File("." + File.separator + "data" + File.separator + followedUser+ File.separator + "photos");
+			File photoDir =new File("." + File.separator + "data" + File.separator + subscribedUser+ File.separator + "photos");
 			String[] photos= photoDir.list();
-			File commentsDir =new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "comments");
+			File commentsDir =new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments");
 			String[] comments = commentsDir.list();
 
 			if(photos != null)
 				for(int i = 0; i < photos.length; i++){
-					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + followedUser+ File.separator + "photos" + File.separator + photos[i]);
+					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subscribedUser+ File.separator + "photos" + File.separator + photos[i]);
 				}
 
 			outStream.writeObject("-t");
 
 			if(comments != null)
 				for(int i = 0; i < comments.length; i++){
-					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + followedUser+ File.separator + "comments" + File.separator + comments[i]);
+					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subscribedUser+ File.separator + "comments" + File.separator + comments[i]);
 				}
 
 			outStream.writeObject("-t");
@@ -505,19 +428,19 @@ public class PhotoShareServer {
 		 * Sends all information about all the photos of a certain user.
 		 * @param outStream the ObjectOutputStream used for sending
 		 * @param followingUser the user getting the information of the other user's photos
-		 * @param followedUser the user that owns the photos
+		 * @param subscribedUser the user that owns the photos
 		 * @throws IOException
 		 * @throws ClassNotFoundException
 		 */
-		private void fetchPhotoInfo(ObjectOutputStream outStream, String followingUser, String followedUser) throws IOException, ClassNotFoundException{
+		private void fetchPhotoInfo(ObjectOutputStream outStream, String followingUser, String subscribedUser) throws IOException, ClassNotFoundException{
 
-			if(!(follows(followingUser,followedUser)||(followingUser.equals(followedUser)))){
+			if(!(UserHandler.isSubscribed(followingUser,subscribedUser)||(followingUser.equals(subscribedUser)))){
 				System.out.println("User does not exist or is not followed");
 				outStream.writeObject(false);
 			}
 			else{
 				outStream.writeObject(true); // if the the target user is followed or is himself
-				File folder = new File("." + File.separator + "data"+ File.separator + followedUser + File.separator + "photos");
+				File folder = new File("." + File.separator + "data"+ File.separator + subscribedUser + File.separator + "photos");
 
 				File[] list = folder.listFiles();
 				for(int i =0;i<list.length;i++){
