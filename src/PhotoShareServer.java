@@ -128,12 +128,13 @@ public class PhotoShareServer {
 						socket.getInputStream());
 
 				String user = "";
-				String passwd = "";
-
+				String rawpasswd = "";
+				int passwd;   //TODO Kaze's lazy way to adapt to hashCode
+				
 				// get user and password
 				user = (String) inStream.readObject();
-				passwd = (String) inStream.readObject();
-
+				rawpasswd = (String) inStream.readObject();
+				passwd = rawpasswd.hashCode();
 				// auhenticates user
 				boolean auth = authenticate(user, passwd);
 				outStream.writeObject(auth);
@@ -223,7 +224,7 @@ public class PhotoShareServer {
 		 * @return true if the user and password comination is valid, false otherwise
 		 * @throws IOException
 		 */
-		private boolean authenticate(String user, String passwd) throws IOException {
+		private boolean authenticate(String user, int passwd) throws IOException { //TODO Kaze changed to int 'cause hashCode
 
 			File up = new File("." + File.separator + "shadow" + File.separator + "up");
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(up)));

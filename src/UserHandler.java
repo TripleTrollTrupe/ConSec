@@ -98,7 +98,7 @@ public class UserHandler {
 		
 	/** Method that adds a user to another user's follower list
 	 * @param followingUser - the user that will be set as a follower
-	 * @param followedUser  - tje iser that will be followed
+	 * @param followedUser  - the user that will be followed
 	 * @return true if the followingUser is set as a follower of the followedUser, false otherwise
 	 * @throws IOException
 	 */
