@@ -14,6 +14,8 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -122,6 +124,7 @@ public class PhotoShareServer {
 		 */
 		public void run() {
 			try {
+				
 				ObjectOutputStream outStream = new ObjectOutputStream(
 						socket.getOutputStream());
 				ObjectInputStream inStream = new ObjectInputStream(
@@ -129,14 +132,11 @@ public class PhotoShareServer {
 
 				String user = "";
 				String rawpasswd = "";
-				int passwd;   //TODO Kaze's lazy way to adapt to hashCode
-				
 				// get user and password
 				user = (String) inStream.readObject();
 				rawpasswd = (String) inStream.readObject();
-				passwd = rawpasswd.hashCode();
 				// auhenticates user
-				boolean auth = authenticate(user, passwd);
+				boolean auth = authenticate(user, hashPassword(rawpasswd));
 				outStream.writeObject(auth);
 
 				if(auth){
@@ -214,6 +214,9 @@ public class PhotoShareServer {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+	
+				e.printStackTrace();
 			}
 		}
 
@@ -224,7 +227,7 @@ public class PhotoShareServer {
 		 * @return true if the user and password comination is valid, false otherwise
 		 * @throws IOException
 		 */
-		private boolean authenticate(String user, int passwd) throws IOException { //TODO Kaze changed to int 'cause hashCode
+		private boolean authenticate(String user, String passwd) throws IOException { //TODO Kaze changed to int 'cause hashCode
 
 			File up = new File("." + File.separator + "shadow" + File.separator + "up");
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(up)));
@@ -549,6 +552,19 @@ public class PhotoShareServer {
 				return choice;
 			}
 			return null;
+		}
+		private String hashPassword(String rawpasswd) throws NoSuchAlgorithmException{
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			md.update(rawpasswd.getBytes());
+			byte [] digest=md.digest();
+			
+			//converts digest to a StringBuffer
+			StringBuffer sb = new StringBuffer();
+			for(int i=0; i<digest.length;i++){
+				sb.append(Integer.toString((digest[i] & 0xFF)+ 0x100,16).substring(1));
+			}
+			return sb.toString();
+			
 		}
 	}
 }
