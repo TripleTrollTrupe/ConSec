@@ -47,7 +47,7 @@ public class PhotoShareServer {
 		File upsha = new File("." + File.separator + "shadow" + File.separator
 				+ "up.sha");
 		Scanner scan = new Scanner(System.in);
-		addUser.initialCheck(scan,up,upsha);
+		Auth.initialCheck(scan,up,upsha);
 
 
 		if(args.length == 1){
