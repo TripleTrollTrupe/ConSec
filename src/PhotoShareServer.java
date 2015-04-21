@@ -14,10 +14,12 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,8 +40,14 @@ public class PhotoShareServer {
 
 	// Starts the server with listening socket on port specified by first argument and thread pool size 20
 	// and runs it
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, IllegalStateException, IOException {
 		System.out.println("server: main");
+		File up = new File("." + File.separator + "shadow" + File.separator
+				+ "up");
+		File upsha = new File("." + File.separator + "shadow" + File.separator
+				+ "up.sha");
+		Scanner scan = new Scanner(System.in);
+		addUser.validateMac(scan, up, upsha); //not working need to fiddle around with sandbox
 
 		if(args.length == 1){
 			PhotoShareServer server = new PhotoShareServer(Integer.parseInt((args[0])),20);
@@ -158,7 +166,6 @@ public class PhotoShareServer {
 
 						case "-l":
 							String listedUser = (String) inStream.readObject();
-
 							fetchPhotoInfo(outStream, user, listedUser);
 							break;
 
@@ -240,7 +247,6 @@ public class PhotoShareServer {
 				}
 			}
 			br.close();
-
 			return auth;
 		}
 
