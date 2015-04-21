@@ -140,6 +140,32 @@ public class addUser {
 		System.out.println("A new MAC has been generated!");	
 	}
 	
-	
+	public static void initialCheck(Scanner scan, File up, File upsha) throws InvalidKeyException, NoSuchAlgorithmException, IllegalStateException, IOException{
+		Path upp = Paths.get(up.getPath());
+		if(up.exists() && upsha.exists() && !validateMac(scan,up,upsha)){
+			System.out.println("The generated MAC code does not correpond to the code stored! Shutting Down!");
+			System.exit(0);
+		}
+		
+		if (!up.exists()) {
+			System.out.println("Registration File does not exist, creating a new one....");
+			Files.createDirectories(upp.getParent());
+			up.createNewFile();
+		}
+		if(!upsha.exists()){
+			System.out.println("Registration File is not protected by a MAC, the server will shutdown if it is not generated now!");
+			System.out.println("Do you want to generate a MAC to protect the file? y/n");
+			String answer = scan.next();
+			while(!answer.equals("y") && !answer.equals("n"))
+				answer=scan.next();
+			if(answer.equals("y")){
+				generateNewMac(scan,up,upsha);
+			}
+			else {
+				System.out.println("Shutting down server...");
+				System.exit(0);
+			}
+		}
+	}
 	
 }

@@ -47,7 +47,8 @@ public class PhotoShareServer {
 		File upsha = new File("." + File.separator + "shadow" + File.separator
 				+ "up.sha");
 		Scanner scan = new Scanner(System.in);
-		addUser.validateMac(scan, up, upsha); //not working need to fiddle around with sandbox
+		addUser.initialCheck(scan,up,upsha);
+
 
 		if(args.length == 1){
 			PhotoShareServer server = new PhotoShareServer(Integer.parseInt((args[0])),20);

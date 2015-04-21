@@ -36,7 +36,7 @@ public class macexample {
 
 		mac.init(key);
 		mac.update(content);
-		byte []getmac =mac.doFinal(); 	
+		byte []getmac =mac.doFinal();	
 		//checking the MAC in the storage
 		System.out.println("mac used for verification :: "+ DatatypeConverter.printBase64Binary(getmac));
 
