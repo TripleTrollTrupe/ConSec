@@ -21,7 +21,7 @@ public class Auth {
 		Mac mac =Mac.getInstance("HmacSHA256");
 		System.out.println("Please insert password to validate MAC: ");
 		byte[] pass= ((scan.next()).getBytes());
-		SecretKey key = new SecretKeySpec(pass,"HmacSHA256");
+		SecretKey key = new SecretKeySpec(pass,"AES"); // I think we're supposed to use AES
 		mac.init(key);	
 		mac.update(getFileBytes(up));
 		byte []code = mac.doFinal();
@@ -53,7 +53,7 @@ public class Auth {
 		Mac mac= Mac.getInstance("HmacSHA256");
 		System.out.println("Please insert password to generate a new MAC: ");
 		byte [] pass = ((scan.next().getBytes()));
-		SecretKey key=new SecretKeySpec(pass,"HmacSHA256");
+		SecretKey key=new SecretKeySpec(pass,"AES"); // I think we're supposed to use AES
 		mac.init(key);
 		mac.update(getFileBytes(up));
 		byte [] genmac = mac.doFinal();
