@@ -23,6 +23,9 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLServerSocketFactory;
+
 /**
  * PhotoShareServer
  * @author SC001
@@ -41,13 +44,14 @@ public class PhotoShareServer {
 	// Starts the server with listening socket on port specified by first argument and thread pool size 20
 	// and runs it
 	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, IllegalStateException, IOException {
+		System.setProperty("javax.net.ssl.keyStore","./keytool/serverkeystore.jck");
 		System.out.println("server: main");
 		File up = new File("." + File.separator + "shadow" + File.separator
 				+ "up");
 		File upsha = new File("." + File.separator + "shadow" + File.separator
 				+ "up.sha");
 		Scanner scan = new Scanner(System.in);
-		Auth.initialCheck(scan,up,upsha);
+		Auth.initialCheck(scan,up,upsha); // Verify integrity of user registration files
 
 
 		if(args.length == 1){
@@ -81,10 +85,11 @@ public class PhotoShareServer {
 	// (only when the process is killed)
 	@SuppressWarnings("resource")
 	public void startServer() {
+		ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 		ServerSocket sSoc = null;
 
 		try {
-			sSoc = new ServerSocket(this.serverPort);
+			sSoc = ssf.createServerSocket(this.serverPort);
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(-1);
@@ -144,7 +149,7 @@ public class PhotoShareServer {
 				// get user and password
 				user = (String) inStream.readObject();
 				rawpasswd = (String) inStream.readObject();
-				// auhenticates user
+				// authenticates user
 				boolean auth = authenticate(user, hashPassword(rawpasswd));
 				outStream.writeObject(auth);
 

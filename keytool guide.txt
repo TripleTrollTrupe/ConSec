@@ -1,0 +1,11 @@
+Create KeyStore/TrustStore:
+
+keytool -genkeypair -alias <alias> -keyalg <algorythm> -keystore <keystore name>
+
+Generate a Certificate
+
+keytool -export -alias <alias> -storepass <password> -file <certificate name> -keystore <keystore name>
+
+Add a certificate to TrustStore:
+
+keytool -import -alias <alias> -file <certificate name> -keystore <keystore name> -storepass <password>

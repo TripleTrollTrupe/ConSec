@@ -13,6 +13,9 @@ import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+
 /**
  * PhotoShareClient
  * @author SC001
@@ -75,7 +78,8 @@ public class PhotoShareClient {
 	 * Starts up the connection and executes the operations specified in the console parameters
 	 */
 	public void startClient(String server, int port, String userID, String [] optionArgs) {
-
+		System.setProperty("javax.net.ssl.trustStore","./keytool/clientkeystore.jck");
+		SocketFactory sf = SSLSocketFactory.getDefault();
 		Socket soc = null;
 		ObjectOutputStream outStream = null;
 		ObjectInputStream inStream = null;
@@ -83,7 +87,7 @@ public class PhotoShareClient {
 		boolean connected = false;
 
 		try {
-			soc = new Socket(server, port);
+			soc = sf.createSocket(server, port);
 			outStream = new ObjectOutputStream(
 					soc.getOutputStream());
 			inStream = new ObjectInputStream(
