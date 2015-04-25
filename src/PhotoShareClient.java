@@ -78,7 +78,7 @@ public class PhotoShareClient {
 	 * Starts up the connection and executes the operations specified in the console parameters
 	 */
 	public void startClient(String server, int port, String userID, String [] optionArgs) {
-		System.setProperty("javax.net.ssl.trustStore","./keytool/clientkeystore.jck");
+		System.setProperty("javax.net.ssl.trustStore","./keytool/clientkeystore.jks");
 		SocketFactory sf = SSLSocketFactory.getDefault();
 		Socket soc = null;
 		ObjectOutputStream outStream = null;

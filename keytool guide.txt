@@ -1,6 +1,6 @@
 Create KeyStore/TrustStore:
 
-keytool -genkeypair -alias <alias> -keyalg <algorythm> -keystore <keystore name>
+keytool -genkeypair -alias <alias> -keyalg <algorythm> -keystore <keystore name> -keysize <size>
 
 Generate a Certificate
 

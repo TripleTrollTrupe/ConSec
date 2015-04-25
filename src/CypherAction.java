@@ -4,50 +4,52 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 
 public class CypherAction {
 
+	/** This method is not necessary and is only used for testing with cyphers
+	 */
 	public static void main(String args[]) throws InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchPaddingException, IOException {
-		File f = new File("." + File.separator + "shadow" + File.separator
-				+ "test.txt");
-		System.out.println("Testing cypher operation....");
-		cypherFile(f); // comment out to test decypher
-		System.out.println("Operation succeeded!");
-		System.out.println("Testing decypher operation...");
-		decypherFile(f); // comment out to test cypher
-		System.out.println("Operation Concluded!");
-	/*obsolete due to keytool usage
-	 * 	if (!existsKeys()) {
-			System.out.println("There are no public or private keys!");
-			generateKeys();
-		}*/
+			NoSuchAlgorithmException, NoSuchPaddingException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
+		System.out.println(getPrivateKey());
+		System.out.println(getPublicKey());
+		File f=new File("."+File.separator+"test"+File.separator+"test.txt");
+		cypherFile(f);
+		decypherFile(f);
 	}
 
 	public static void cypherFile(File f) throws NoSuchAlgorithmException,
-			NoSuchPaddingException, InvalidKeyException, IOException {
-		KeyGenerator kg = KeyGenerator.getInstance("AES");
-		kg.init(128);
-		SecretKey key = kg.generateKey();
-
-		Cipher c = Cipher.getInstance("AES");
-		c.init(Cipher.ENCRYPT_MODE, key);
+			NoSuchPaddingException, InvalidKeyException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
+		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
+		kg.init(128); //creates a key with 128 bytes
+		SecretKey sessionkey = kg.generateKey(); //generates a random key
+		PublicKey publickey = getPublicKey();
+		String testkey = DatatypeConverter.printBase64Binary(publickey.getEncoded());
+		System.out.println(testkey.length());
+		
+		Cipher c = Cipher.getInstance("AES"); //Used to cipher with randomly generated symettric key
+		c.init(Cipher.ENCRYPT_MODE, sessionkey);
+		//byte [] secretkey=c.doFinal(sessionkey.getEncoded()); gets secret key in byte array form 
+			
 
 		FileInputStream fis;
 		FileOutputStream fos;
@@ -62,28 +64,44 @@ public class CypherAction {
 		while ((i = fis.read(b)) != -1) {
 			cos.write(b, 0, i);
 		}
-		byte[] keyEncoded = key.getEncoded();
+		c = Cipher.getInstance("RSA"); //Cipher used to cipher with servers public key
+		c.init(Cipher.WRAP_MODE, publickey);
+		byte[] keyWrapped = c.wrap(sessionkey);
+		System.out.println(keyWrapped.length);
 		FileOutputStream kos = new FileOutputStream(f.getPath() + ".key");
 		ObjectOutputStream oos = new ObjectOutputStream(kos);
-		oos.write(keyEncoded);
+		oos.write(keyWrapped);
 		oos.close();
 		fis.close();
 		cos.close();
+		System.out.println("Cipher Operation Concluded!");
 	}
 
 	public static void decypherFile(File f) throws IOException,
 			InvalidKeyException, NoSuchAlgorithmException,
-			NoSuchPaddingException {
-		Cipher c = Cipher.getInstance("AES");
-		FileInputStream fis = new FileInputStream(f.getPath() + ".key");
-		ObjectInputStream ois = new ObjectInputStream(fis);
-		byte[] keyEncoded = new byte[16];
-		ois.read(keyEncoded);
-		SecretKeySpec keySpec2 = new SecretKeySpec(keyEncoded, "AES");
-		c.init(Cipher.DECRYPT_MODE, keySpec2); // SecretKeySpec é subclasse de
-												// secretKey
+			NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException {
 
+		FileInputStream fis = new FileInputStream(f.getPath() + ".key");
+		
+		PrivateKey privateKey=getPrivateKey(); //gets privateKey !!check if working properly !!
+		String testkey= DatatypeConverter.printBase64Binary(privateKey.getEncoded());
+		System.out.println("private key size: "+ testkey.length());
+		//Key unwrappedKey = c.unwrap(wrappedKey, "DESede", Cipher.SECRET_KEY);
+		
+		
+		Cipher c = Cipher.getInstance("RSA");
+		c.init(Cipher.UNWRAP_MODE, privateKey);
+		
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		byte[] keyEncoded = new byte[256]; //this size probably because of wrapping
+		ois.read(keyEncoded); //gets key from file
 		ois.close();
+		Key unwrappedKey = c.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY); //unwraps the AES key inside
+		
+		c=Cipher.getInstance("AES");
+		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de
+
+		
 
 		FileInputStream fin = new FileInputStream(f.getPath() + ".cif");
 		FileOutputStream fout = new FileOutputStream(f.getPath());
@@ -100,7 +118,7 @@ public class CypherAction {
 		cis.close();
 	}
 
-	//method that generates keys for the server, to be used exclusively within the server! 
+	/*method that generates keys for the server, to be used exclusively within the server! 
 	//it's probably becoming obsolete because of keytool usage
 	public static void generateKeys() throws NoSuchAlgorithmException,
 			IOException {
@@ -137,17 +155,34 @@ public class CypherAction {
 		oos2.write(krEncoded);
 		oos2.close();
 		System.out.println("Public and Private Keys have been generated!");
-	}
+	}*/
 	//can be used to check existence of keystorage
 	public static boolean existsKeyStorage() {
 		File keystorage = new File("." + File.separator + "keytool"+File.separator+"serverkeystore.jck");
-		/*obsolete due to keytool usage
-		 * File pubkey = new File("." + File.separator + "keys" + File.separator
-				+ "public.key");
-		File privkey = new File("." + File.separator + "keys" + File.separator
-				+ "private.key");
-		return (pubkey.exists() && privkey.exists());*/
 		return keystorage.exists();
 	}
+	
+	private static PrivateKey getPrivateKey() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException{
+		
+		File keystorage = new File("." + File.separator + "keytool"+File.separator+"serverkeystore.jks");
+		FileInputStream fis= new FileInputStream(keystorage);
+		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+		keystore.load(fis, "requiem".toCharArray());
+		String alias = "server";   //alias used to register keystore
+		Key key = keystore.getKey(alias, "requiem".toCharArray()); //password used on keystore
+		fis.close();
+		return (PrivateKey) key;
+	}
+	
+	private static PublicKey getPublicKey() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException, IOException{
+		File keystorage = new File("." + File.separator + "keytool"+File.separator+"serverkeystore.jks");
+		FileInputStream fis= new FileInputStream(keystorage);
+		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+		keystore.load(fis, "requiem".toCharArray());
+		String alias = "server";   //alias used to register keystore
+		PublicKey publickey = keystore.getCertificate(alias).getPublicKey();
+		return publickey;
+	}
+
 
 }
