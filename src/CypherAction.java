@@ -24,7 +24,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.xml.bind.DatatypeConverter;
 
 public class CypherAction {
 
@@ -49,7 +48,6 @@ public class CypherAction {
 		
 		Cipher c = Cipher.getInstance("AES"); //Used to cipher with randomly generated symettric key
 		c.init(Cipher.ENCRYPT_MODE, sessionkey);
-		//byte [] secretkey=c.doFinal(sessionkey.getEncoded()); gets secret key in byte array form 
 			
 
 		FileOutputStream fos;
@@ -67,9 +65,9 @@ public class CypherAction {
 		c = Cipher.getInstance("RSA"); //Cipher used to cipher with servers public key
 		c.init(Cipher.WRAP_MODE, publickey);
 		byte[] keyWrapped = c.wrap(sessionkey); //secret key wrapped with public key
-		File keydir = new File("."+File.separator +"keys"+File.separator +f.getParentFile());
+		File keydir = new File("."+File.separator +"keys"+File.separator +f.getParentFile()); //directory to store key
 		if(!keydir.exists()){
-			Files.createDirectories(Paths.get(keydir.getPath()));
+			Files.createDirectories(Paths.get(keydir.getPath())); // creates directory to store key if are not be exists
 		}
 		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath() + ".key");//file where the key will be stored
 		ObjectOutputStream oos = new ObjectOutputStream(kos);
@@ -87,9 +85,7 @@ public class CypherAction {
 		FileInputStream fiskey = new FileInputStream(skey);
 		
 		PrivateKey privateKey=getPrivateKey(); //gets privateKey !!check if working properly !!
-		String testkey= DatatypeConverter.printBase64Binary(privateKey.getEncoded());
-		System.out.println("private key size: "+ testkey.length());
-		//Key unwrappedKey = c.unwrap(wrappedKey, "DESede", Cipher.SECRET_KEY);
+
 		
 		
 		Cipher c = Cipher.getInstance("RSA");
@@ -198,6 +194,47 @@ public class CypherAction {
 		PublicKey publickey = keystore.getCertificate(alias).getPublicKey();
 		return publickey;
 	}
+	
+	public static void cipherComment(String comment, File f) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, IllegalBlockSizeException{
+		
+		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
+		kg.init(128); //creates a key with 128 bytes
+		SecretKey sessionkey = kg.generateKey(); //generates a random key
+		PublicKey publickey = getPublicKey(); //gets public key from keystore (check aux method)
+		
+		Cipher c = Cipher.getInstance("AES"); //Used to cipher with randomly generated symettric key
+		c.init(Cipher.ENCRYPT_MODE, sessionkey);
+			
 
+		FileOutputStream fos;
+		CipherOutputStream cos;
+		
+		fos = new FileOutputStream(f.getPath() + ".cif"); //stream where the ciphered file will be written
+			
+		cos = new CipherOutputStream(fos, c);
+		byte[] b = comment.getBytes();
+
+		cos.write(b, 0, b.length); //writes to the cipher file
+		
+		
+		c = Cipher.getInstance("RSA"); //Cipher used to cipher with servers public key
+		c.init(Cipher.WRAP_MODE, publickey);
+		byte[] keyWrapped = c.wrap(sessionkey); //secret key wrapped with public key
+		File keydir = new File("."+File.separator +"keys"+File.separator +f.getParentFile()); //directory to store key
+		if(!keydir.exists()){
+			Files.createDirectories(Paths.get(keydir.getPath())); // creates directory to store key if are not be exists
+		}
+		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath() + ".key");//file where the key will be stored
+		ObjectOutputStream oos = new ObjectOutputStream(kos);
+		oos.write(keyWrapped); //writes down the wrapped key
+		oos.close();
+		cos.close();
+		System.out.println("Cipher Operation Concluded!");
+	}
+
+
+	public static void decipherComment(ObjectInputStream in){
+		
+	}
 
 }

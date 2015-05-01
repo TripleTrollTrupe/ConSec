@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import javax.crypto.CipherInputStream;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -375,7 +374,7 @@ public class PhotoShareClient {
 	 * @return true - if operation is successful / false - if the operation is interrupted
 	 * @throws IOException - If there's an unexpected issue with outStream
 	 * @throws ClassNotFoundException - If there's an unexpected issue with inStream
-	 * Receives files sent from the server, receives size first, then procedes to receive the bytes of the file
+	 * Receives files sent from the server, receives size first, then proceeds to receive the bytes of the file
 	 */
 	private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user, String dir) throws IOException, ClassNotFoundException {
 
@@ -410,12 +409,6 @@ public class PhotoShareClient {
 				fos.write(bytebuf, 0, n);
 			}
 			
-		/*CipherInputStream cis = new CipherInputStream(fiscif, c);
-		byte[] bytebuf = new byte[1024];
-		int n;
-		while ((n=cis.read(bytebuf,0,1024))>0) {//reads cipher file
-			out.write(bytebuf, 0, n); //writes to the stream
-		}*/
 			System.out.println("File transfer completed!");
 
 		} finally {

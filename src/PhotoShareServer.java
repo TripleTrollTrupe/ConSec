@@ -1,10 +1,8 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -22,6 +20,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -315,7 +314,7 @@ public class PhotoShareServer {
 				System.out.println("--> " + size);
 				System.out.println(filename);
 
-				Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
+				
 				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
 				File fcif = new File(f.getPath()+".cif");
 				File fkey = new File(f.getPath()+".key");
@@ -364,23 +363,28 @@ public class PhotoShareServer {
 		 * @return true if the comment is created successfully, false otherwise Note that for the comment operation
 		 * to be successful the photo must exist and follows(followingUser,subscribedUser) must be true
 		 * @throws IOException
+		 * @throws IllegalBlockSizeException 
+		 * @throws CertificateException 
+		 * @throws KeyStoreException 
+		 * @throws NoSuchPaddingException 
+		 * @throws NoSuchAlgorithmException 
+		 * @throws UnrecoverableKeyException 
+		 * @throws InvalidKeyException 
 		 */
-		private boolean comment(String subscribingUser, String comment, String subscribedUser, String filename) throws IOException{
+		private boolean comment(String subscribingUser, String comment, String subscribedUser, String filename) throws IOException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, IllegalBlockSizeException{
 
 			// create file (and directories) if non existing
-			File f = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "photos" + File.separator + filename);
-			File fc = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments" + File.separator + filename + ".comment");
+			String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+			File f = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "photos" + File.separator + filename+".cif");
+			File fc = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments" + File.separator + filename +"_"+timestamp+ ".comment");
 			Path fpath = Paths.get("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments" + File.separator + filename);
-
+			
 			if(f.exists() && (UserHandler.isSubscribed(subscribingUser, subscribedUser) || subscribingUser.equals(subscribedUser))){
-				if(!fc.exists()){
-					Files.createDirectories(fpath.getParent());
-					fc.createNewFile();
+				if(!f.exists()){
+					Files.createDirectories(fpath.getParent());				
 				}
 
-				BufferedWriter bw = new BufferedWriter( new FileWriter(fc,true));
-				bw.write(subscribingUser + ": " + comment + "\r\n");
-				bw.close();
+				CypherAction.cipherComment(comment, fc);
 
 				return true;
 			}
@@ -463,7 +467,6 @@ public class PhotoShareServer {
 			File f = new File(file);
 			File fcif = new File(f.getName().replace(".cif", ""));
 			
-			byte[] fileByteBuf = new byte [1024];
 			int fileSize = (int) f.length();
 			String filename = fcif.getName();
 
