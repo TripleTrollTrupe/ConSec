@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import javax.crypto.CipherInputStream;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -388,8 +389,6 @@ public class PhotoShareClient {
 			size = (Integer) inStream.readObject();
 			filename = (String) inStream.readObject();
 
-
-
 			System.out.println("--> " + size);
 			System.out.println(filename);
 
@@ -403,20 +402,20 @@ public class PhotoShareClient {
 
 			outStream.writeObject(true);
 
-			byte[] fileByteBuf = new byte[1024];
-			int bytesRead = 0; // bytes jah lidos
+			byte[] bytebuf = new byte[1024];
+			int n;
 			fos = new FileOutputStream(f);
 
-			while (bytesRead < size) {	
-				int count = inStream.read(fileByteBuf, 0, 1024);
-				if (count == -1) {
-					throw new IOException("Expected file size: " + size
-							+ "\nRead size: " + bytesRead);
-				}
-
-				fos.write(fileByteBuf, 0, count);
-				bytesRead += count;
+			while ((n=inStream.read(bytebuf,0,1024))>0) {	
+				fos.write(bytebuf, 0, n);
 			}
+			
+		/*CipherInputStream cis = new CipherInputStream(fiscif, c);
+		byte[] bytebuf = new byte[1024];
+		int n;
+		while ((n=cis.read(bytebuf,0,1024))>0) {//reads cipher file
+			out.write(bytebuf, 0, n); //writes to the stream
+		}*/
 			System.out.println("File transfer completed!");
 
 		} finally {

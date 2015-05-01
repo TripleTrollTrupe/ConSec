@@ -15,14 +15,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 
@@ -230,6 +236,27 @@ public class PhotoShareServer {
 			} catch (NoSuchAlgorithmException e) {
 	
 				e.printStackTrace();
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnrecoverableKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (KeyStoreException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (CertificateException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalBlockSizeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 
@@ -265,8 +292,16 @@ public class PhotoShareServer {
 		 * @requires authenticated user
 		 * @throws IOException
 		 * @throws ClassNotFoundException 
+		 * @throws BadPaddingException 
+		 * @throws IllegalBlockSizeException 
+		 * @throws CertificateException 
+		 * @throws KeyStoreException 
+		 * @throws NoSuchPaddingException 
+		 * @throws NoSuchAlgorithmException 
+		 * @throws UnrecoverableKeyException 
+		 * @throws InvalidKeyException 
 		 */
-		private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException {
+		private boolean receiveFile(ObjectInputStream inStream, ObjectOutputStream outStream, String user) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
 
 			FileOutputStream fos = null;
 
@@ -282,22 +317,20 @@ public class PhotoShareServer {
 
 				Path fpath = Paths.get("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
 				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
-
+				File fcif = new File(f.getPath()+".cif");
+				File fkey = new File(f.getPath()+".key");
+				
 				// check if there's already a photo with the same name owned by the same user or if empty file
-				if(!f.exists() && size != 0){
-					// create file and directories if non existing
-					Files.createDirectories(fpath.getParent());
-					f.createNewFile();
-				}
-				else{
-					System.out.println("Already existing file!");
+
+				if((fcif.exists() && fkey.exists()) || size==0){
+					System.out.println("Already existing file or empty file!");
 					outStream.writeObject(false);
 					return false;
 				}
 
 				outStream.writeObject(true);
 
-				byte[] fileByteBuf = new byte[1024];
+			/*	byte[] fileByteBuf = new byte[1024];
 				int bytesRead = 0;
 				fos = new FileOutputStream(f);
 
@@ -310,7 +343,8 @@ public class PhotoShareServer {
 					fos.write(fileByteBuf, 0, count);
 					bytesRead += count;
 
-				}
+				}*/
+				CypherAction.cypherFile(f, size, inStream);
 				System.out.println("File transfer completed!");
 
 			} finally {
@@ -364,8 +398,14 @@ public class PhotoShareServer {
 		 * @return true if the operation succeeds, false otherwise
 		 * @throws IOException
 		 * @throws ClassNotFoundException
+		 * @throws CertificateException 
+		 * @throws KeyStoreException 
+		 * @throws NoSuchPaddingException 
+		 * @throws NoSuchAlgorithmException 
+		 * @throws UnrecoverableKeyException 
+		 * @throws InvalidKeyException 
 		 */
-		private boolean UpdateFollower(String followingUser,String subscribedUser,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException{
+		private boolean UpdateFollower(String followingUser,String subscribedUser,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException{
 
 			if(!UserHandler.userExists(followingUser) || !UserHandler.userExists(subscribedUser)){
 				outStream.writeObject(false);
@@ -408,17 +448,24 @@ public class PhotoShareServer {
 		 * @return true if no error occurs, false otherwise
 		 * @throws IOException
 		 * @throws ClassNotFoundException
+		 * @throws CertificateException 
+		 * @throws KeyStoreException 
+		 * @throws NoSuchPaddingException 
+		 * @throws NoSuchAlgorithmException 
+		 * @throws UnrecoverableKeyException 
+		 * @throws InvalidKeyException 
 		 */
-		private boolean sendFile(ObjectOutputStream outStream, ObjectInputStream inStream, String file) throws IOException, ClassNotFoundException {
+		private boolean sendFile(ObjectOutputStream outStream, ObjectInputStream inStream, String file) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
 
 			boolean noError = true;
 
 			outStream.writeObject("-p");
 			File f = new File(file);
-
+			File fcif = new File(f.getName().replace(".cif", ""));
+			
 			byte[] fileByteBuf = new byte [1024];
 			int fileSize = (int) f.length();
-			String filename = f.getName();
+			String filename = fcif.getName();
 
 			outStream.writeObject(fileSize);
 			outStream.writeObject(filename);
@@ -428,14 +475,7 @@ public class PhotoShareServer {
 			noError = (Boolean) inStream.readObject();
 
 			if(noError){
-				// send packets of max 1024 bytes
-				int n;
-				FileInputStream fin = new FileInputStream(f);
-				while ((n=fin.read(fileByteBuf, 0, 1024))>0) { 
-					outStream.write(fileByteBuf, 0, n);
-				}
-				System.out.println("File transfer completed!");
-				fin.close();
+				CypherAction.decypherFile(f, outStream,fileSize);
 			}
 			return noError;
 		}
@@ -476,8 +516,14 @@ public class PhotoShareServer {
 		 * @param user the user getting the data
 		 * @throws IOException
 		 * @throws ClassNotFoundException
+		 * @throws CertificateException 
+		 * @throws KeyStoreException 
+		 * @throws NoSuchPaddingException 
+		 * @throws NoSuchAlgorithmException 
+		 * @throws UnrecoverableKeyException 
+		 * @throws InvalidKeyException 
 		 */
-		private void getSubsLatest(ObjectOutputStream outStream, ObjectInputStream inStream, String user) throws IOException, ClassNotFoundException {
+		private void getSubsLatest(ObjectOutputStream outStream, ObjectInputStream inStream, String user) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
 
 			ArrayList<String> subs = subs(user);
 

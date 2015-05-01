@@ -8,4 +8,7 @@ grant codeBase "file:bin${/}-"{
 	permission java.io.FilePermission ".${/}data" , "read,write"; // to check/create user folders if non existent
 	permission java.io.FilePermission ".${/}" , "read,write"; // to check/create data folder if non existent
 	permission java.util.PropertyPermission "javax.net.ssl.keyStore" , "write";
+	permission java.io.FilePermission ".${/}keytool${/}serverkeystore.jks" , "read";
+	permission java.io.FilePermission ".${/}keys" , "read, write";
+	permission java.io.FilePermission ".${/}keys${/}-" , "read , write";
 };

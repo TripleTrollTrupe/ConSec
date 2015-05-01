@@ -4,6 +4,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyStore;
@@ -32,56 +34,57 @@ public class CypherAction {
 			NoSuchAlgorithmException, NoSuchPaddingException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
 		System.out.println(getPrivateKey());
 		System.out.println(getPublicKey());
-		File f=new File("."+File.separator+"test"+File.separator+"test.txt");
-		cypherFile(f);
-		decypherFile(f);
+		//File f=new File("."+File.separator+"test"+File.separator+"test.jpg");
+	//	cypherFile(f);
+		//decypherFile(f);
 	}
-
-	public static void cypherFile(File f) throws NoSuchAlgorithmException,
+	// Cipher might be done while transferring no need to save the whole file beforehand
+	public static void cypherFile(File f, int size, ObjectInputStream in) throws NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeyException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
+		
 		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
 		kg.init(128); //creates a key with 128 bytes
 		SecretKey sessionkey = kg.generateKey(); //generates a random key
-		PublicKey publickey = getPublicKey();
-		String testkey = DatatypeConverter.printBase64Binary(publickey.getEncoded());
-		System.out.println(testkey.length());
+		PublicKey publickey = getPublicKey(); //gets public key from keystore (check aux method)
 		
 		Cipher c = Cipher.getInstance("AES"); //Used to cipher with randomly generated symettric key
 		c.init(Cipher.ENCRYPT_MODE, sessionkey);
 		//byte [] secretkey=c.doFinal(sessionkey.getEncoded()); gets secret key in byte array form 
 			
 
-		FileInputStream fis;
 		FileOutputStream fos;
 		CipherOutputStream cos;
-
-		fis = new FileInputStream(f);
-		fos = new FileOutputStream(f.getPath() + ".cif");
-
+		
+		fos = new FileOutputStream(f.getPath() + ".cif"); //stream where the ciphered file will be written
+			
 		cos = new CipherOutputStream(fos, c);
 		byte[] b = new byte[16];
 		int i;
-		while ((i = fis.read(b)) != -1) {
-			cos.write(b, 0, i);
+			while ((i = in.read(b)) != -1) {//reads from the stream
+				cos.write(b, 0, i); //writes to the cipher file
 		}
+		
 		c = Cipher.getInstance("RSA"); //Cipher used to cipher with servers public key
 		c.init(Cipher.WRAP_MODE, publickey);
-		byte[] keyWrapped = c.wrap(sessionkey);
-		System.out.println(keyWrapped.length);
-		FileOutputStream kos = new FileOutputStream(f.getPath() + ".key");
+		byte[] keyWrapped = c.wrap(sessionkey); //secret key wrapped with public key
+		File keydir = new File("."+File.separator +"keys"+File.separator +f.getParentFile());
+		if(!keydir.exists()){
+			Files.createDirectories(Paths.get(keydir.getPath()));
+		}
+		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath() + ".key");//file where the key will be stored
 		ObjectOutputStream oos = new ObjectOutputStream(kos);
-		oos.write(keyWrapped);
+		oos.write(keyWrapped); //writes down the wrapped key
 		oos.close();
-		fis.close();
 		cos.close();
 		System.out.println("Cipher Operation Concluded!");
 	}
-
-	public static void decypherFile(File f) throws IOException,
+	public static void decypherFile(File f,ObjectOutputStream out, int filesize) throws IOException,
 			InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException {
 
-		FileInputStream fis = new FileInputStream(f.getPath() + ".key");
+		File fkey = new File(f.getPath().replace(".cif", ".key"));
+		File skey = new File("keys"+File.separator+fkey);
+		FileInputStream fiskey = new FileInputStream(skey);
 		
 		PrivateKey privateKey=getPrivateKey(); //gets privateKey !!check if working properly !!
 		String testkey= DatatypeConverter.printBase64Binary(privateKey.getEncoded());
@@ -92,30 +95,42 @@ public class CypherAction {
 		Cipher c = Cipher.getInstance("RSA");
 		c.init(Cipher.UNWRAP_MODE, privateKey);
 		
-		ObjectInputStream ois = new ObjectInputStream(fis);
-		byte[] keyEncoded = new byte[256]; //this size probably because of wrapping
-		ois.read(keyEncoded); //gets key from file
-		ois.close();
+		ObjectInputStream oiskey = new ObjectInputStream(fiskey);
+		byte[] keyEncoded = new byte[256]; //the key's size after wrapping
+		oiskey.read(keyEncoded); //gets key from file
+		oiskey.close();
 		Key unwrappedKey = c.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY); //unwraps the AES key inside
 		
 		c=Cipher.getInstance("AES");
-		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de
+		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de		
 
+		FileInputStream fiscif = new FileInputStream(f.getPath());
 		
-
-		FileInputStream fin = new FileInputStream(f.getPath() + ".cif");
-		FileOutputStream fout = new FileOutputStream(f.getPath());
-
-		CipherInputStream cis = new CipherInputStream(fin, c);
-		byte[] d = new byte[16];
-		int j = cis.read(d);
-		while (j != -1) {
-			fout.write(d, 0, j);
-			j = cis.read(d);
+		CipherInputStream cis = new CipherInputStream(fiscif, c);
+		byte[] bytebuf = new byte[1024];
+		int n;
+		while ((n=cis.read(bytebuf,0,1024))>0) {//reads cipher file
+			out.write(bytebuf, 0, n); //writes to the stream
 		}
 
-		fout.close();
 		cis.close();
+		fiscif.close();
+		oiskey.close();
+		
+		/*	byte[] fileByteBuf = new byte[1024];
+		int bytesRead = 0;
+		fos = new FileOutputStream(f);
+
+		while (bytesRead < size) {	
+			int count = inStream.read(fileByteBuf, 0, 1024);
+			if (count == -1) {
+				throw new IOException("Expected file size: " + size
+						+ "\nRead size: " + bytesRead);
+			}
+			fos.write(fileByteBuf, 0, count);
+			bytesRead += count;
+
+		}*/
 	}
 
 	/*method that generates keys for the server, to be used exclusively within the server! 
