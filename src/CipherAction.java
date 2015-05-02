@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
@@ -25,20 +26,20 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
-public class CypherAction {
+public class CipherAction {
 
-	/** This method is not necessary and is only used for testing with cyphers
+	/** This method is not necessary and is only used for testing with ciphers
 	 */
 	public static void main(String args[]) throws InvalidKeyException,
 			NoSuchAlgorithmException, NoSuchPaddingException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
 		System.out.println(getPrivateKey());
 		System.out.println(getPublicKey());
 		//File f=new File("."+File.separator+"test"+File.separator+"test.jpg");
-	//	cypherFile(f);
-		//decypherFile(f);
+	//	cipherFile(f);
+		//decipherFile(f);
 	}
 	// Cipher might be done while transferring no need to save the whole file beforehand
-	public static void cypherFile(File f, int size, ObjectInputStream in) throws NoSuchAlgorithmException,
+	public static void cipherFile(File f, int size, ObjectInputStream in) throws NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeyException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
 		
 		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
@@ -56,11 +57,19 @@ public class CypherAction {
 		fos = new FileOutputStream(f.getPath() + ".cif"); //stream where the ciphered file will be written
 			
 		cos = new CipherOutputStream(fos, c);
-		byte[] b = new byte[16];
-		int i;
-			while ((i = in.read(b)) != -1) {//reads from the stream
-				cos.write(b, 0, i); //writes to the cipher file
+		byte[] bytebuf = new byte[16];
+		int bytesRead=0;
+			while (bytesRead<size) {//reads from the stream
+				int count = in.read(bytebuf,0,16);
+				if (count == -1) {
+					throw new IOException("Expected file size: " + size
+							+ "\nRead size: " + bytesRead);
+				}
+				cos.write(bytebuf, 0, count); //writes to the cipher file
+				bytesRead+=count;
 		}
+		fos.close();
+		cos.close();
 		
 		c = Cipher.getInstance("RSA"); //Cipher used to cipher with servers public key
 		c.init(Cipher.WRAP_MODE, publickey);
@@ -73,10 +82,22 @@ public class CypherAction {
 		ObjectOutputStream oos = new ObjectOutputStream(kos);
 		oos.write(keyWrapped); //writes down the wrapped key
 		oos.close();
-		cos.close();
+		
 		System.out.println("Cipher Operation Concluded!");
+		/*	byte[] fileByteBuf = new byte[1024];
+		int bytesRead = 0;
+		fos = new FileOutputStream(f);
+
+		while (bytesRead < size) {	
+			int count = inStream.read(fileByteBuf, 0, 1024);
+			if (count == -1) {
+				throw new IOException("Expected file size: " + size
+						+ "\nRead size: " + bytesRead);
+			}
+			fos.write(fileByteBuf, 0, count);
+			bytesRead += count;*/
 	}
-	public static void decypherFile(File f,ObjectOutputStream out, int filesize) throws IOException,
+	public static void decipherFile(File f,ObjectOutputStream out, int filesize) throws IOException,
 			InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException {
 
@@ -103,10 +124,12 @@ public class CypherAction {
 		FileInputStream fiscif = new FileInputStream(f.getPath());
 		
 		CipherInputStream cis = new CipherInputStream(fiscif, c);
-		byte[] bytebuf = new byte[1024];
-		int n;
-		while ((n=cis.read(bytebuf,0,1024))>0) {//reads cipher file
-			out.write(bytebuf, 0, n); //writes to the stream
+		byte[] bytebuf = new byte[16];
+		int bytesRead=0;
+		bytesRead=cis.read(bytebuf,0,4); //reads size
+		out.write(bytebuf,0,4);//writes size
+		while ((bytesRead=cis.read(bytebuf,0,16))>0) {//reads cipher file
+			out.write(bytebuf, 0, bytesRead); //writes to the stream
 		}
 
 		cis.close();
@@ -192,6 +215,7 @@ public class CypherAction {
 		keystore.load(fis, "requiem".toCharArray());
 		String alias = "server";   //alias used to register keystore
 		PublicKey publickey = keystore.getCertificate(alias).getPublicKey();
+		fis.close();
 		return publickey;
 	}
 	
@@ -231,10 +255,82 @@ public class CypherAction {
 		cos.close();
 		System.out.println("Cipher Operation Concluded!");
 	}
+	
+	public static void cypherSize(int size, File f) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException{
+		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
+		kg.init(128); //creates a key with 128 bytes
+		SecretKey sessionkey = kg.generateKey(); //generates a random key
+		PublicKey publickey = getPublicKey(); //gets public key from keystore (check aux method)
+		
+		Cipher c = Cipher.getInstance("AES"); //Used to cipher with randomly generated symettric key
+		c.init(Cipher.ENCRYPT_MODE, sessionkey);
+			
 
+		FileOutputStream fos;
+		CipherOutputStream cos;
+		//creates directory to store sizes if not existing
+		File sizedir = new File("."+File.separator +"sizes"+File.separator +f.getParentFile()); //directory to store key
+		if(!sizedir.exists()){
+			Files.createDirectories(Paths.get(sizedir.getPath())); // creates directory to store key if are not be exists
+		}
+		
+		fos = new FileOutputStream("."+File.separator +"sizes" + File.separator +f.getPath() + ".size.cif"); //stream where the ciphered file will be written
+			
+		cos = new CipherOutputStream(fos, c);
+		byte[] b = ByteBuffer.allocate(4).putInt(size).array();
 
-	public static void decipherComment(ObjectInputStream in){
+		cos.write(b, 0, b.length); //writes to the cipher file
+		
+		
+		c = Cipher.getInstance("RSA"); //Cipher used to cipher with servers public key
+		c.init(Cipher.WRAP_MODE, publickey);
+		byte[] keyWrapped = c.wrap(sessionkey); //secret key wrapped with public key
+		File keydir = new File("."+File.separator +"keys"+File.separator + "sizes" + File.separator +f.getParentFile()); //directory to store key
+		if(!keydir.exists()){
+			Files.createDirectories(Paths.get(keydir.getPath())); // creates directory to store key if are not be exists
+		}
+		FileOutputStream kos = new FileOutputStream("keys"+File.separator +"sizes" +File.separator+f.getPath() + ".size.key");//file where the key will be stored
+		ObjectOutputStream oos = new ObjectOutputStream(kos);
+		oos.write(keyWrapped); //writes down the wrapped key
+		oos.close();
+		cos.close();
+		System.out.println("Cipher Operation Concluded!");
+	}
+	
+
+	//need to think of way to do this
+	public static int getOriginalSize(File f) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException{
+		File fkey = new File("sizes"+f.getPath().replace(".size.cif", ".size.key"));
+		File skey = new File("keys"+File.separator+fkey.getPath());
+		FileInputStream fiskey = new FileInputStream(skey);
+		
+		PrivateKey privateKey=getPrivateKey(); //gets privateKey !!check if working properly !!
+
+		
+		
+		Cipher c = Cipher.getInstance("RSA");
+		c.init(Cipher.UNWRAP_MODE, privateKey);
+		
+		ObjectInputStream oiskey = new ObjectInputStream(fiskey);
+		byte[] keyEncoded = new byte[256]; //the key's size after wrapping
+		oiskey.read(keyEncoded); //gets key from file
+		oiskey.close();
+		Key unwrappedKey = c.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY); //unwraps the AES key inside
+		
+		c=Cipher.getInstance("AES");
+		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de		
+
+		FileInputStream fiscif = new FileInputStream("sizes"+File.separator+f.getPath());
+		
+		CipherInputStream cis = new CipherInputStream(fiscif, c);	
+		byte []size = new byte [4];
+		cis.read(size);
+		cis.close();
+		System.out.println(ByteBuffer.wrap(size).getInt());
+		return ByteBuffer.wrap(size).getInt();
+
 		
 	}
+	
 
 }

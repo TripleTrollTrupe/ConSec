@@ -318,7 +318,6 @@ public class PhotoShareServer {
 				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
 				File fcif = new File(f.getPath()+".cif");
 				File fkey = new File(f.getPath()+".key");
-				
 				// check if there's already a photo with the same name owned by the same user or if empty file
 
 				if((fcif.exists() && fkey.exists()) || size==0){
@@ -343,7 +342,8 @@ public class PhotoShareServer {
 					bytesRead += count;
 
 				}*/
-				CypherAction.cypherFile(f, size, inStream);
+				CipherAction.cypherSize(size, f);
+				CipherAction.cipherFile(f, size, inStream);
 				System.out.println("File transfer completed!");
 
 			} finally {
@@ -383,8 +383,8 @@ public class PhotoShareServer {
 				if(!f.exists()){
 					Files.createDirectories(fpath.getParent());				
 				}
-
-				CypherAction.cipherComment(comment, fc);
+				CipherAction.cypherSize(comment.length(), fc);
+				CipherAction.cipherComment(comment, fc);
 
 				return true;
 			}
@@ -466,8 +466,8 @@ public class PhotoShareServer {
 			outStream.writeObject("-p");
 			File f = new File(file);
 			File fcif = new File(f.getName().replace(".cif", ""));
-			
-			int fileSize = (int) f.length();
+			File fsize = new File(f.getPath().replace(".cif",".size.cif"));
+			int fileSize = CipherAction.getOriginalSize(fsize); //get the previous file size
 			String filename = fcif.getName();
 
 			outStream.writeObject(fileSize);
@@ -478,7 +478,7 @@ public class PhotoShareServer {
 			noError = (Boolean) inStream.readObject();
 
 			if(noError){
-				CypherAction.decypherFile(f, outStream,fileSize);
+				CipherAction.decipherFile(f, outStream,fileSize);
 			}
 			return noError;
 		}

@@ -402,11 +402,18 @@ public class PhotoShareClient {
 			outStream.writeObject(true);
 
 			byte[] bytebuf = new byte[1024];
-			int n;
+			int bytesRead=0;
 			fos = new FileOutputStream(f);
 
-			while ((n=inStream.read(bytebuf,0,1024))>0) {	
-				fos.write(bytebuf, 0, n);
+			while (bytesRead < size) {	
+				int count = inStream.read(bytebuf, 0, 1024);
+				if (count == -1) {
+					throw new IOException("Expected file size: " + size
+							+ "\nRead size: " + bytesRead);
+				}
+
+				fos.write(bytebuf, 0, count);
+				bytesRead += count;
 			}
 			
 			System.out.println("File transfer completed!");
