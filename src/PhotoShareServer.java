@@ -16,6 +16,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
@@ -57,7 +58,7 @@ public class PhotoShareServer {
 				+ "up.sha");
 		Scanner scan = new Scanner(System.in);
 		Auth.initialCheck(scan,up,upsha); // Verify integrity of user registration files
-
+		System.out.println("Generated MAC is correct, booting up server!");
 
 		if(args.length == 1){
 			PhotoShareServer server = new PhotoShareServer(Integer.parseInt((args[0])),20);
@@ -183,7 +184,7 @@ public class PhotoShareServer {
 						case "-g":
 							String subsID = "";
 							subsID = (String) inStream.readObject();
-							UpdateFollower(user, subsID, outStream, inStream);
+							updateFollower(user, subsID, outStream, inStream);
 							break;
 
 						case "-c":
@@ -200,8 +201,8 @@ public class PhotoShareServer {
 							break;
 
 						case "-f":
-							String subscribingUser = (String) inStream.readObject();
-							outStream.writeObject(UserHandler.subscribe(subscribingUser, user));
+							String followingUser = (String) inStream.readObject();
+							outStream.writeObject(UserHandler.follow(followingUser, user));
 							break;
 
 						case "-n":
@@ -254,6 +255,9 @@ public class PhotoShareServer {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SignatureException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -371,15 +375,15 @@ public class PhotoShareServer {
 		 * @throws UnrecoverableKeyException 
 		 * @throws InvalidKeyException 
 		 */
-		private boolean comment(String subscribingUser, String comment, String subscribedUser, String filename) throws IOException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, IllegalBlockSizeException{
+		private boolean comment(String follower, String comment, String followed, String filename) throws IOException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, IllegalBlockSizeException{
 
 			// create file (and directories) if non existing
 			String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-			File f = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "photos" + File.separator + filename+".cif");
-			File fc = new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments" + File.separator + filename +"_"+timestamp+ ".comment");
-			Path fpath = Paths.get("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments" + File.separator + filename);
+			File f = new File("." + File.separator + "data" + File.separator + followed + File.separator + "photos" + File.separator + filename+".cif");
+			File fc = new File("." + File.separator + "data" + File.separator + followed + File.separator + "comments" + File.separator + filename +"_"+timestamp+ ".comment");
+			Path fpath = Paths.get("." + File.separator + "data" + File.separator + followed + File.separator + "comments" + File.separator + filename);
 			
-			if(f.exists() && (UserHandler.isSubscribed(subscribingUser, subscribedUser) || subscribingUser.equals(subscribedUser))){
+			if(f.exists() && (UserHandler.isFollowing(follower, followed) || follower.equals(followed))){
 				if(!f.exists()){
 					Files.createDirectories(fpath.getParent());				
 				}
@@ -409,34 +413,34 @@ public class PhotoShareServer {
 		 * @throws UnrecoverableKeyException 
 		 * @throws InvalidKeyException 
 		 */
-		private boolean UpdateFollower(String followingUser,String subscribedUser,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException{
+		private boolean updateFollower(String follower,String followed,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException{
 
-			if(!UserHandler.userExists(followingUser) || !UserHandler.userExists(subscribedUser)){
+			if(!UserHandler.userExists(follower) || !UserHandler.userExists(followed)){
 				outStream.writeObject(false);
 				return false;
 			}
-			if(!UserHandler.isSubscribed(followingUser,subscribedUser) && !(followingUser.equals(subscribedUser))){
+			if(!UserHandler.isFollowing(follower,followed) && !(follower.equals(followed))){
 				outStream.writeObject(false);
 				return false;
 			}
 			// validated operation, start sending
 			outStream.writeObject(true);
 
-			File photoDir =new File("." + File.separator + "data" + File.separator + subscribedUser+ File.separator + "photos");
+			File photoDir =new File("." + File.separator + "data" + File.separator + followed+ File.separator + "photos");
 			String[] photos= photoDir.list();
-			File commentsDir =new File("." + File.separator + "data" + File.separator + subscribedUser + File.separator + "comments");
+			File commentsDir =new File("." + File.separator + "data" + File.separator + followed + File.separator + "comments");
 			String[] comments = commentsDir.list();
 
 			if(photos != null)
 				for(int i = 0; i < photos.length; i++){
-					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subscribedUser+ File.separator + "photos" + File.separator + photos[i]);
+					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + followed+ File.separator + "photos" + File.separator + photos[i]);
 				}
 
 			outStream.writeObject("-t");
 
 			if(comments != null)
 				for(int i = 0; i < comments.length; i++){
-					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subscribedUser+ File.separator + "comments" + File.separator + comments[i]);
+					sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + followed+ File.separator + "comments" + File.separator + comments[i]);
 				}
 
 			outStream.writeObject("-t");
@@ -491,20 +495,20 @@ public class PhotoShareServer {
 		 * @throws IOException
 		 * @throws ClassNotFoundException
 		 */
-		private void fetchPhotoInfo(ObjectOutputStream outStream, String followingUser, String subscribedUser) throws IOException, ClassNotFoundException{
+		private void fetchPhotoInfo(ObjectOutputStream outStream, String follower, String followed) throws IOException, ClassNotFoundException{
 
-			if(!(UserHandler.isSubscribed(followingUser,subscribedUser)||(followingUser.equals(subscribedUser)))){
+			if(!(UserHandler.isFollowing(follower,followed)||(follower.equals(followed)))){
 				System.out.println("User does not exist or is not followed");
 				outStream.writeObject(false);
 			}
 			else{
 				outStream.writeObject(true); // if the the target user is followed or is himself
-				File folder = new File("." + File.separator + "data"+ File.separator + subscribedUser + File.separator + "photos");
+				File folder = new File("." + File.separator + "data"+ File.separator + followed + File.separator + "photos");
 
 				File[] list = folder.listFiles();
 				for(int i =0;i<list.length;i++){
 					SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-					outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
+					outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()).replace(".cif",""));
 					outStream.writeObject(true);
 				}
 				outStream.writeObject("No more photos");
@@ -628,4 +632,5 @@ public class PhotoShareServer {
 			
 		}
 	}
+	
 }

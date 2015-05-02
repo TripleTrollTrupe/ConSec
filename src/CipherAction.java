@@ -14,6 +14,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
@@ -29,14 +31,16 @@ import javax.crypto.SecretKey;
 public class CipherAction {
 
 	/** This method is not necessary and is only used for testing with ciphers
+	 * @throws SignatureException 
+	 * @throws ClassNotFoundException 
 	 */
 	public static void main(String args[]) throws InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchPaddingException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
-		System.out.println(getPrivateKey());
-		System.out.println(getPublicKey());
-		//File f=new File("."+File.separator+"test"+File.separator+"test.jpg");
-	//	cipherFile(f);
-		//decipherFile(f);
+			NoSuchAlgorithmException, NoSuchPaddingException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException, SignatureException, ClassNotFoundException {
+	//	System.out.println(getPrivateKey());
+	//	System.out.println(getPublicKey());
+		File f=new File("."+File.separator+"data"+File.separator+"kazex"+File.separator+"subscriptions");
+		generateSignature(f);
+		verifySignature(f);
 	}
 	// Cipher might be done while transferring no need to save the whole file beforehand
 	public static void cipherFile(File f, int size, ObjectInputStream in) throws NoSuchAlgorithmException,
@@ -54,21 +58,20 @@ public class CipherAction {
 		FileOutputStream fos;
 		CipherOutputStream cos;
 		
-		fos = new FileOutputStream(f.getPath() + ".cif"); //stream where the ciphered file will be written
-			
-		cos = new CipherOutputStream(fos, c);
-		byte[] bytebuf = new byte[16];
-		int bytesRead=0;
-			while (bytesRead<size) {//reads from the stream
-				int count = in.read(bytebuf,0,16);
-				if (count == -1) {
-					throw new IOException("Expected file size: " + size
-							+ "\nRead size: " + bytesRead);
-				}
-				cos.write(bytebuf, 0, count); //writes to the cipher file
-				bytesRead+=count;
+		if(!f.exists()){
+			Files.createDirectories(Paths.get(f.getParent()));
 		}
-		fos.close();
+		
+		fos = new FileOutputStream(f.getPath() + ".cif"); //stream where the ciphered file will be written
+	
+		cos = new CipherOutputStream(fos,c);
+		byte[] bytebuf = new byte[128];
+		int bytesRead=0;
+		while((bytesRead=in.read(bytebuf))!=-1){
+			cos.write(bytebuf,0,bytesRead);
+		}
+		
+	
 		cos.close();
 		
 		c = Cipher.getInstance("RSA"); //Cipher used to cipher with servers public key
@@ -84,19 +87,9 @@ public class CipherAction {
 		oos.close();
 		
 		System.out.println("Cipher Operation Concluded!");
-		/*	byte[] fileByteBuf = new byte[1024];
-		int bytesRead = 0;
-		fos = new FileOutputStream(f);
 
-		while (bytesRead < size) {	
-			int count = inStream.read(fileByteBuf, 0, 1024);
-			if (count == -1) {
-				throw new IOException("Expected file size: " + size
-						+ "\nRead size: " + bytesRead);
-			}
-			fos.write(fileByteBuf, 0, count);
-			bytesRead += count;*/
 	}
+	
 	public static void decipherFile(File f,ObjectOutputStream out, int filesize) throws IOException,
 			InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException {
@@ -124,32 +117,17 @@ public class CipherAction {
 		FileInputStream fiscif = new FileInputStream(f.getPath());
 		
 		CipherInputStream cis = new CipherInputStream(fiscif, c);
-		byte[] bytebuf = new byte[16];
+		byte[] bytebuf = new byte[128];
 		int bytesRead=0;
-		bytesRead=cis.read(bytebuf,0,4); //reads size
-		out.write(bytebuf,0,4);//writes size
-		while ((bytesRead=cis.read(bytebuf,0,16))>0) {//reads cipher file
-			out.write(bytebuf, 0, bytesRead); //writes to the stream
+
+		while((bytesRead=cis.read(bytebuf))!=-1){
+			out.write(bytebuf,0,bytesRead);
 		}
 
 		cis.close();
 		fiscif.close();
 		oiskey.close();
 		
-		/*	byte[] fileByteBuf = new byte[1024];
-		int bytesRead = 0;
-		fos = new FileOutputStream(f);
-
-		while (bytesRead < size) {	
-			int count = inStream.read(fileByteBuf, 0, 1024);
-			if (count == -1) {
-				throw new IOException("Expected file size: " + size
-						+ "\nRead size: " + bytesRead);
-			}
-			fos.write(fileByteBuf, 0, count);
-			bytesRead += count;
-
-		}*/
 	}
 
 	/*method that generates keys for the server, to be used exclusively within the server! 
@@ -233,6 +211,11 @@ public class CipherAction {
 		FileOutputStream fos;
 		CipherOutputStream cos;
 		
+		if(!f.exists()){
+			Files.createDirectories(Paths.get(f.getParent()));
+		}
+		
+		
 		fos = new FileOutputStream(f.getPath() + ".cif"); //stream where the ciphered file will be written
 			
 		cos = new CipherOutputStream(fos, c);
@@ -253,7 +236,7 @@ public class CipherAction {
 		oos.write(keyWrapped); //writes down the wrapped key
 		oos.close();
 		cos.close();
-		System.out.println("Cipher Operation Concluded!");
+		System.out.println("Comment Cipher Operation Concluded!");
 	}
 	
 	public static void cypherSize(int size, File f) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException{
@@ -294,10 +277,9 @@ public class CipherAction {
 		oos.write(keyWrapped); //writes down the wrapped key
 		oos.close();
 		cos.close();
-		System.out.println("Cipher Operation Concluded!");
+		System.out.println("Size Cipher Operation Concluded!");
 	}
 	
-
 	//need to think of way to do this
 	public static int getOriginalSize(File f) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException{
 		File fkey = new File("sizes"+f.getPath().replace(".size.cif", ".size.key"));
@@ -326,11 +308,53 @@ public class CipherAction {
 		byte []size = new byte [4];
 		cis.read(size);
 		cis.close();
-		System.out.println(ByteBuffer.wrap(size).getInt());
 		return ByteBuffer.wrap(size).getInt();
-
-		
+	
 	}
+	
+	
+	public static void generateSignature(File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, SignatureException, InvalidKeyException{
+		FileInputStream fis= new FileInputStream(f);
+		//ObjectInputStream ois= new ObjectInputStream(fis);
+		FileOutputStream sigfos= new FileOutputStream(f+".sig");
+		ObjectOutputStream sigoos = new ObjectOutputStream(sigfos);
+		PrivateKey privatekey=getPrivateKey();
+		Signature s = Signature.getInstance("MD5withRSA");
+		s.initSign(privatekey);
+		byte buf[]=new byte[16];
+		while((fis.read(buf,0,16))>0){
+		s.update(buf);
+		}
+		sigoos.writeObject(s.sign());
+		fis.close();
+		sigfos.close();
+		System.out.println("Generated a new signature for:" +f.getPath());
+	}
+	public static void verifySignature(File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, InvalidKeyException, SignatureException, ClassNotFoundException{		
+		FileInputStream fis = new FileInputStream(f);
+		File fsig = new File(f+".sig");
+		FileInputStream fissig = new FileInputStream(fsig);
+		ObjectInputStream oissig = new ObjectInputStream(fissig);
+		byte sig[] = (byte[]) oissig.readObject();
+		oissig.close();
+		PublicKey publickey=getPublicKey(); 
+		Signature s = Signature.getInstance("MD5withRSA");
+		
+		s.initVerify(publickey);
+		byte buf[]=new byte[16];
+		while((fis.read(buf,0,16))>0){
+		s.update(buf);
+		}
+		if (s.verify(sig)){
+			System.out.println("Signature Valid");
+		} else{
+			System.out.println("Signature Invalid");
+		}
+		fis.close();
+	}
+	
+	
+	
 	
 
 }

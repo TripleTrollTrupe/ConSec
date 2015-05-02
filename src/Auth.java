@@ -31,7 +31,7 @@ public class Auth {
 			
 	}
 	
-	public static byte [] getFileBytes(File f) throws IOException{
+	private static byte [] getFileBytes(File f) throws IOException{
 		Path fp=Paths.get(f.getPath());
 		byte [] data = Files.readAllBytes(fp);
 		return data;

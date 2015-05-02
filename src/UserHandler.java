@@ -8,6 +8,12 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 
 
 
@@ -24,8 +30,15 @@ public class UserHandler {
 	 * @param subscribedUser the user that is to be subscribed to
 	 * @return true if subscribingUser is set to subscribe subscribingUser successfully, false otherwise
 	 * @throws IOException
+	 * @throws ClassNotFoundException 
+	 * @throws SignatureException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyStoreException 
+	 * @throws InvalidKeyException 
+	 * @throws UnrecoverableKeyException 
 	 */
-	public static boolean subscribe(String subscribingUser, String subscribedUser) throws IOException {
+	public static boolean subscribe(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException {
 
 		if(!userExists(subscribingUser) || isSubscribed(subscribingUser,subscribedUser))
 			return false;
@@ -36,14 +49,16 @@ public class UserHandler {
 		if(!f.exists()){
 			Files.createDirectories(fpath.getParent());
 			f.createNewFile();
+		} else {
+			CipherAction.verifySignature(f);
 		}
-
+		
 		BufferedWriter bw = new BufferedWriter( new FileWriter(f,true));
 		bw.write(subscribedUser + "\r\n");
 		bw.newLine();
 		bw.flush();
 		bw.close();
-
+		CipherAction.generateSignature(f);
 		return true;
 	}
 
@@ -101,8 +116,15 @@ public class UserHandler {
 	 * @param followedUser  - the user that will be followed
 	 * @return true if the followingUser is set as a follower of the followedUser, false otherwise
 	 * @throws IOException
+	 * @throws ClassNotFoundException 
+	 * @throws SignatureException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyStoreException 
+	 * @throws InvalidKeyException 
+	 * @throws UnrecoverableKeyException 
 	 */
-	public static boolean follow(String followingUser, String followedUser) throws IOException{
+	public static boolean follow(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException{
 		if(!userExists(followingUser) || isFollowing(followingUser,followedUser))
 			return false;
 		
@@ -112,6 +134,8 @@ public class UserHandler {
 		if(!f.exists()){
 			Files.createDirectories(fpath.getParent());
 			f.createNewFile();
+		} else {
+			CipherAction.verifySignature(f);
 		}
 		
 		BufferedWriter bw = new BufferedWriter(new FileWriter(f,true));
@@ -119,7 +143,8 @@ public class UserHandler {
 		bw.newLine();
 		bw.flush();
 		bw.close();
-
+		CipherAction.generateSignature(f);
+		subscribe(followingUser,followedUser);
 		return true;
 	}
 
@@ -129,7 +154,7 @@ public class UserHandler {
 	 * @return true if followingUser is a part of followedUser's follower list
 	 * @throws IOException
 	 */
-	private static boolean isFollowing(String followingUser, String followedUser) throws IOException {
+	public static boolean isFollowing(String followingUser, String followedUser) throws IOException {
 		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
 		
 		if(!f.exists())
