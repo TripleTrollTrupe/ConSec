@@ -382,22 +382,20 @@ public class CipherAction {
 	//	FileInputStream fis = new FileInputStream(f);
 		File fsig = new File(f.getPath().replace(".cif",".sig"));
 		System.out.println(fsig.getPath());
-		//Path fsigp = Paths.get(fsig.getPath());
 		FileInputStream fissig = new FileInputStream(fsig);
 		ObjectInputStream oissig = new ObjectInputStream(fissig);
 		byte sig[] = new byte [256];
 		System.out.println("signature is here"+fsig.getPath());
-		oissig.read(sig); // ver melhor como ler assinatura
+		oissig.read(sig);
 		fissig.close();
 		oissig.close();
 		PublicKey publickey=getPublicKey(); 
 		Signature s = Signature.getInstance("MD5withRSA");
 		
 		s.initVerify(publickey);
-		//byte buf[]=new byte[16];
-		//while((fis.read(buf,0,16))>0){
+
 		s.update(cipherContent(f).toString().getBytes());
-		//}
+		
 		if (s.verify(sig)){
 			System.out.println("Signature Valid");
 		} else{

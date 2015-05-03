@@ -17,6 +17,9 @@ Usando o Eclipse:
  								 <photo> | -f <followUserIds> | - n]
  			-VM arguments: 	-Djava.security.manager -Djava.security.policy=ec.client.policy
  			
+ 	Programa addUser:
+ 			-VM arguments: -Djava.security.manager 
+ 						-Djava.security.policy=ec.addUser.policy	
  	
 De referir que os VM arguments sao passados de forma a que seja utilizada a sandbox desenhada pelo grupo
 
@@ -32,3 +35,4 @@ Nota: partindo do suposto que nos encontramos na directoria das classes respecti
 	
 	java -Djava.security.manager -Djava.security.policy=cmd.client.policy PhotoShareCliente -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | -c <comment> <userId> <photo> | -f <followUserIds> | - n]
 
+	Programa addUser: -Djava.security.manager -Djava.security.policy=ec.addUser.policy addUser

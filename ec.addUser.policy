@@ -1,0 +1,5 @@
+grant codeBase "file:bin${/}-"{
+   	permission java.io.FilePermission ".${/}shadow${/}" , "read,write"; //to create up and up.sha files if they do not exist
+	permission java.io.FilePermission ".${/}shadow${/}up" , "read,write"; // to check users and passwords 
+	permission java.io.FilePermission ".${/}shadow${/}up.sha" , "read,write";//to check MAC 
+};
