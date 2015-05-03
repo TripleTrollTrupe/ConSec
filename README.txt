@@ -7,8 +7,8 @@ Usando o Eclipse:
  			-Program arguments: <porto> (neste projecto o servidor deve correr no porto 23456)
  			-VM arguments:  -Djava.security.manager 
  							-Djava.security.policy=server.policy
-							 http://−Djavax.net.ssl.keyStore=/keytool/serverkeystore.jks
-							 http://−Djavax.net.ssl.keyStorePassword=requiem
+							−Djavax.net.ssl.keyStore=/keytool/serverkeystore.jks
+							−Djavax.net.ssl.keyStorePassword=requiem
 
  			
  	Do lado do cliente
@@ -16,8 +16,8 @@ Usando o Eclipse:
  		os seguintes argumentos:
  			-Program arguments: -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | -c <comment> <userId>
  								 <photo> | -f <followUserIds> | - n]
- 			-VM arguments: -Djava.security.manager -Djava.security.policy=client.policy
-							http://−Djavax.net.ssl.trustStore=/keytool/clientkeystore.jks
+ 			-VM arguments: 	-Djava.security.manager -Djava.security.policy=client.policy
+							−Djavax.net.ssl.trustStore=/keytool/clientkeystore.jks
  			
  	
 De referir que os VM arguments sao passados de forma a que seja utilizada a sandbox desenhada pelo grupo
