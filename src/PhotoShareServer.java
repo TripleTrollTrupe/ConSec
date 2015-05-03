@@ -377,8 +377,10 @@ public class PhotoShareServer {
 		 * @throws NoSuchAlgorithmException 
 		 * @throws UnrecoverableKeyException 
 		 * @throws InvalidKeyException 
+		 * @throws ClassNotFoundException 
+		 * @throws SignatureException 
 		 */
-		private boolean comment(String follower, String comment, String followed, String filename) throws IOException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, IllegalBlockSizeException{
+		private boolean comment(String follower, String comment, String followed, String filename) throws IOException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, IllegalBlockSizeException, SignatureException, ClassNotFoundException{
 
 			// create file (and directories) if non existing
 			String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
@@ -414,8 +416,9 @@ public class PhotoShareServer {
 		 * @throws NoSuchAlgorithmException 
 		 * @throws UnrecoverableKeyException 
 		 * @throws InvalidKeyException 
+		 * @throws SignatureException 
 		 */
-		private boolean updateFollower(String follower,String followed,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException{
+		private boolean updateFollower(String follower,String followed,ObjectOutputStream outStream,ObjectInputStream inStream) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, SignatureException{
 
 			if(!UserHandler.userExists(follower) || !UserHandler.userExists(followed)){
 				outStream.writeObject(false);
@@ -502,8 +505,9 @@ public class PhotoShareServer {
 		 * @throws NoSuchAlgorithmException 
 		 * @throws InvalidKeyException 
 		 * @throws UnrecoverableKeyException 
+		 * @throws SignatureException 
 		 */
-		private void fetchPhotoInfo(ObjectOutputStream outStream, String follower, String followed) throws IOException, ClassNotFoundException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException{
+		private void fetchPhotoInfo(ObjectOutputStream outStream, String follower, String followed) throws IOException, ClassNotFoundException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, SignatureException{
 
 			if(!(UserHandler.isFollowing(follower,followed)||(follower.equals(followed)))){
 				System.out.println("User does not exist or is not followed");

@@ -381,11 +381,9 @@ public class CipherAction {
 	public static void verifySignature(File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, InvalidKeyException, SignatureException, ClassNotFoundException, NoSuchPaddingException{		
 	//	FileInputStream fis = new FileInputStream(f);
 		File fsig = new File(f.getPath()+".sig");
-		System.out.println(fsig.getPath());
 		FileInputStream fissig = new FileInputStream(fsig);
 		ObjectInputStream oissig = new ObjectInputStream(fissig);
 		byte sig[] = new byte [256];
-		System.out.println("signature is here"+fsig.getPath());
 		oissig.read(sig);
 		fissig.close();
 		oissig.close();
@@ -441,7 +439,6 @@ public class CipherAction {
 		byte[] bytebuf = new byte[1]; //so we don't have to deal with padding on the stringbuilder 
 	
 		while((cis.read(bytebuf))!=-1){
-			System.out.println(sb.toString());
 			sb.append(new String (bytebuf));
 		}
 

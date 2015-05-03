@@ -99,13 +99,15 @@ public class UserHandler {
 	 * @throws NoSuchAlgorithmException 
 	 * @throws InvalidKeyException 
 	 * @throws UnrecoverableKeyException 
+	 * @throws ClassNotFoundException 
+	 * @throws SignatureException 
 	 */
-	public static boolean isSubscribed(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
+	public static boolean isSubscribed(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, SignatureException, ClassNotFoundException {
 
 		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
 		if(!f.exists())
 			return false;
-		
+		CipherAction.verifySignature(f);
 		StringBuilder sb= CipherAction.cipherContent(f);
 		return sb.toString().contains(subscribedUser);
 	}
@@ -157,12 +159,14 @@ public class UserHandler {
 	 * @throws NoSuchAlgorithmException 
 	 * @throws InvalidKeyException 
 	 * @throws UnrecoverableKeyException 
+	 * @throws ClassNotFoundException 
+	 * @throws SignatureException 
 	 */
-	public static boolean isFollowing(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
+	public static boolean isFollowing(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, SignatureException, ClassNotFoundException {
 		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
 		if(!f.exists())
 			return false;
-		
+		CipherAction.verifySignature(f);
 		StringBuilder sb= CipherAction.cipherContent(f);
 		return sb.toString().contains(followingUser);
 		
