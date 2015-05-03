@@ -51,7 +51,8 @@ public class PhotoShareServer {
 	// Starts the server with listening socket on port specified by first argument and thread pool size 20
 	// and runs it
 	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, IllegalStateException, IOException {
-		System.setProperty("javax.net.ssl.keyStore",("."+File.separator+"keytool"+File.separator + "serverkeystore.jks"));
+		System.setProperty("javax.net.ssl.keyStore",("."+File.separator+"serverkeystore.jks"));
+		System.setProperty("javax.net.ssl.keyStorePassword","requiem");
 		System.out.println("server: main");
 		File up = new File("." + File.separator + "shadow" + File.separator
 				+ "up");
@@ -574,7 +575,8 @@ public class PhotoShareServer {
 				outStream.writeObject("-t");
 			} else
 				outStream.writeObject(false);
-		}}
+			}
+		}
 
 		/**
 		 * Compiles a user's followed users into a list.
