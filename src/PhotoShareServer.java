@@ -569,8 +569,10 @@ public class PhotoShareServer {
 						File []comments = commentdir.listFiles();
 						if(comments!=null && commentdir.isDirectory()){
 						for(int i=0;i<comments.length;i++){
-							if(comments[i].getName().startsWith(photo.getName()))
+							if(comments[i].getName().startsWith(photo.getName())){
+								outStream.writeObject("-c");
 								sendFile(outStream,inStream,comments[i].getPath());
+							}
 						}
 					//	if(comment.exists() && !comment.isDirectory()){
 						//	outStream.writeObject("-c");
