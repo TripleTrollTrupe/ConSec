@@ -21,6 +21,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -382,7 +383,6 @@ public class PhotoShareServer {
 			File f = new File("." + File.separator + "data" + File.separator + followed + File.separator + "photos" + File.separator + filename+".cif");
 			File fc = new File("." + File.separator + "data" + File.separator + followed + File.separator + "comments" + File.separator + filename +"_"+timestamp+ ".comment");
 			Path fpath = Paths.get("." + File.separator + "data" + File.separator + followed + File.separator + "comments" + File.separator + filename);
-			
 			if(f.exists() && (UserHandler.isFollowing(follower, followed) || follower.equals(followed))){
 				if(!f.exists()){
 					Files.createDirectories(fpath.getParent());				
@@ -494,8 +494,14 @@ public class PhotoShareServer {
 		 * @param subscribedUser the user that owns the photos
 		 * @throws IOException
 		 * @throws ClassNotFoundException
+		 * @throws CertificateException 
+		 * @throws KeyStoreException 
+		 * @throws NoSuchPaddingException 
+		 * @throws NoSuchAlgorithmException 
+		 * @throws InvalidKeyException 
+		 * @throws UnrecoverableKeyException 
 		 */
-		private void fetchPhotoInfo(ObjectOutputStream outStream, String follower, String followed) throws IOException, ClassNotFoundException{
+		private void fetchPhotoInfo(ObjectOutputStream outStream, String follower, String followed) throws IOException, ClassNotFoundException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException{
 
 			if(!(UserHandler.isFollowing(follower,followed)||(follower.equals(followed)))){
 				System.out.println("User does not exist or is not followed");
@@ -577,24 +583,14 @@ public class PhotoShareServer {
 		 */
 		private ArrayList<String> subs(String followingUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException {
 
-			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
+			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions.cif");
 			CipherAction.verifySignature(subFile);
+			StringBuilder sb =CipherAction.cipherContent(subFile);
 			if(!subFile.exists())
 				return null;                                                            
+			System.out.println(sb.toString());
+			ArrayList<String> subList = new ArrayList<String>(Arrays.asList(sb.toString().split("\n")));
 
-			ArrayList<String> subList = new ArrayList<String>();
-
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(subFile)));
-
-			if (followingUser.length() != 0){
-
-				String line;
-				while((line = br.readLine()) != null){
-					if(!line.isEmpty())
-						subList.add(line);
-				}
-			}
-			br.close();
 
 			return subList;
 		}
@@ -608,7 +604,7 @@ public class PhotoShareServer {
 			File fl = new File(dir);
 
 			if(fl.isDirectory()){
-				System.out.println("here");
+				//System.out.println("here");
 				File[] files = fl.listFiles(new FileFilter() {          
 					public boolean accept(File file) {
 						return file.isFile();

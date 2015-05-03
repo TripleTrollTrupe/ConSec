@@ -12,6 +12,7 @@ import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
@@ -39,8 +40,9 @@ public class UserHandler {
 	 * @throws UnrecoverableKeyException 
 	 * @throws NoSuchPaddingException 
 	 * @throws IllegalBlockSizeException 
+	 * @throws BadPaddingException 
 	 */
-	public static boolean subscribe(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException, IllegalBlockSizeException {
+	public static boolean subscribe(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 
 		if(!userExists(subscribingUser) || isSubscribed(subscribingUser,subscribedUser))
 			return false;
@@ -51,12 +53,13 @@ public class UserHandler {
 		if(!f.exists()){
 			Files.createDirectories(Paths.get(f.getParent()));
 			f.createNewFile();
-			CipherAction.cipherFile(f);
+			CipherAction.startingCipher(f, subscribedUser);
 		} else {
 			CipherAction.verifySignature(f);//might give us problems use string instead
+			CipherAction.addToCipher(f,subscribedUser);
 		}	
 		
-		CipherAction.addToCipher(f,subscribedUser);
+		
 		CipherAction.generateSignature(f);
 		return true;
 	}
@@ -90,24 +93,21 @@ public class UserHandler {
 	 * @param subscribedUser the subscribed user
 	 * @return true if the subscribingUser is subscribed to the subscribedUser, false otherwise
 	 * @throws IOException
+	 * @throws CertificateException 
+	 * @throws KeyStoreException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidKeyException 
+	 * @throws UnrecoverableKeyException 
 	 */
-	public static boolean isSubscribed(String subscribingUser, String subscribedUser) throws IOException {
+	public static boolean isSubscribed(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
 
-		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
-
+		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions.cif");
 		if(!f.exists())
 			return false;
-
-		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
-		boolean isSubscribed = false;
-
-		String line;
-		while((line = br.readLine()) != null && !isSubscribed){
-			isSubscribed = (subscribedUser).equals(line);
-		}
-		br.close();
-
-		return isSubscribed;
+		
+		StringBuilder sb= CipherAction.cipherContent(f);
+		return sb.toString().contains(subscribedUser);
 	}
 		
 	/** Method that adds a user to another user's follower list
@@ -124,8 +124,9 @@ public class UserHandler {
 	 * @throws UnrecoverableKeyException 
 	 * @throws NoSuchPaddingException 
 	 * @throws IllegalBlockSizeException 
+	 * @throws BadPaddingException 
 	 */
-	public static boolean follow(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException, IllegalBlockSizeException{
+	public static boolean follow(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
 		if(!userExists(followingUser) || isFollowing(followingUser,followedUser))
 			return false;
 		
@@ -135,12 +136,11 @@ public class UserHandler {
 		if(!f.exists()){
 			Files.createDirectories(Paths.get(f.getParent()));
 			f.createNewFile();
-			CipherAction.cipherFile(f);
+			CipherAction.startingCipher(f, followingUser);
 		} else {
-			CipherAction.verifySignature(f);
+			CipherAction.verifySignature(f);				
+			CipherAction.addToCipher(f,followingUser);
 		}
-		
-		CipherAction.addToCipher(f,followingUser);
 		CipherAction.generateSignature(f);
 		subscribe(followingUser,followedUser);
 		return true;
@@ -151,23 +151,21 @@ public class UserHandler {
 	 * @param followedUser  - user to check if he is followed by followingUser
 	 * @return true if followingUser is a part of followedUser's follower list
 	 * @throws IOException
+	 * @throws CertificateException 
+	 * @throws KeyStoreException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidKeyException 
+	 * @throws UnrecoverableKeyException 
 	 */
-	public static boolean isFollowing(String followingUser, String followedUser) throws IOException {
-		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
-		
+	public static boolean isFollowing(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
+		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers.cif");
 		if(!f.exists())
 			return false;
 		
-		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
-		boolean follows = false;
+		StringBuilder sb= CipherAction.cipherContent(f);
+		return sb.toString().contains(followingUser);
 		
-		String line;
-		while((line = br.readLine()) !=null && !follows){
-			follows = (followingUser).equals(line);
-		}
-		br.close();
-		
-		return follows;
 		
 	}
 	
