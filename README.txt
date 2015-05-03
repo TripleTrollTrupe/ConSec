@@ -23,16 +23,12 @@ De referir que os VM arguments sao passados de forma a que seja utilizada a sand
 
 
 Se for pretendido executar o programa usando apenas o terminal deve se executar os seguintes comandos
-Nota: partindo do suposto que nos encontramos na directoria das classes respectivas
+Nota: partindo do suposto que nos encontramos na directoria das classes respectivas(bin)
 
 	Do lado do servidor
-	java -Djava.security.manager 
- 		 -Djava.security.policy=cmd.server.policy
-		 PhotoShareServer <port>
+	java -Djava.security.manager -Djava.security.policy=cmd.server.policy PhotoShareServer <port>
 
 	Do lado do cliente
 	
-	java -Djava.security.manager -Djava.security.policy=cmd.client.policy
-		 PhotoShareCliente -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | 
-		 -c <comment> <userId> <photo> | -f <followUserIds> | - n]
+	java -Djava.security.manager -Djava.security.policy=cmd.client.policy PhotoShareCliente -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | -c <comment> <userId> <photo> | -f <followUserIds> | - n]
 
