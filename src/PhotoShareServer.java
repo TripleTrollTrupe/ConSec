@@ -50,7 +50,7 @@ public class PhotoShareServer {
 	// Starts the server with listening socket on port specified by first argument and thread pool size 20
 	// and runs it
 	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, IllegalStateException, IOException {
-		System.setProperty("javax.net.ssl.keyStore","./keytool/serverkeystore.jks");
+		System.setProperty("javax.net.ssl.keyStore",("."+File.separator+"keytool"+File.separator + "serverkeystore.jks"));
 		System.out.println("server: main");
 		File up = new File("." + File.separator + "shadow" + File.separator
 				+ "up");
@@ -529,8 +529,9 @@ public class PhotoShareServer {
 		 * @throws NoSuchAlgorithmException 
 		 * @throws UnrecoverableKeyException 
 		 * @throws InvalidKeyException 
+		 * @throws SignatureException 
 		 */
-		private void getSubsLatest(ObjectOutputStream outStream, ObjectInputStream inStream, String user) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
+		private void getSubsLatest(ObjectOutputStream outStream, ObjectInputStream inStream, String user) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, SignatureException {
 
 			ArrayList<String> subs = subs(user);
 
@@ -565,11 +566,19 @@ public class PhotoShareServer {
 		 * @return an ArrayList containing all the users followed by followingUser, null if no users are
 		 * followed by followingUser
 		 * @throws IOException
+		 * @throws ClassNotFoundException 
+		 * @throws SignatureException 
+		 * @throws CertificateException 
+		 * @throws NoSuchAlgorithmException 
+		 * @throws KeyStoreException 
+		 * @throws InvalidKeyException 
+		 * @throws UnrecoverableKeyException 
+		 * @throws NoSuchPaddingException 
 		 */
-		private ArrayList<String> subs(String followingUser) throws IOException {
+		private ArrayList<String> subs(String followingUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException {
 
 			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
-
+			CipherAction.verifySignature(subFile);
 			if(!subFile.exists())
 				return null;                                                            
 

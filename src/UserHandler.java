@@ -1,12 +1,9 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
@@ -14,6 +11,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 
 
@@ -37,27 +37,26 @@ public class UserHandler {
 	 * @throws KeyStoreException 
 	 * @throws InvalidKeyException 
 	 * @throws UnrecoverableKeyException 
+	 * @throws NoSuchPaddingException 
+	 * @throws IllegalBlockSizeException 
 	 */
-	public static boolean subscribe(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException {
+	public static boolean subscribe(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException, IllegalBlockSizeException {
 
 		if(!userExists(subscribingUser) || isSubscribed(subscribingUser,subscribedUser))
 			return false;
 
-		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
-		Path fpath = Paths.get("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
+		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions.cif");
+		//Path fpath = Paths.get("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
 
 		if(!f.exists()){
-			Files.createDirectories(fpath.getParent());
+			Files.createDirectories(Paths.get(f.getParent()));
 			f.createNewFile();
+			CipherAction.cipherFile(f);
 		} else {
-			CipherAction.verifySignature(f);
-		}
+			CipherAction.verifySignature(f);//might give us problems use string instead
+		}	
 		
-		BufferedWriter bw = new BufferedWriter( new FileWriter(f,true));
-		bw.write(subscribedUser + "\r\n");
-		bw.newLine();
-		bw.flush();
-		bw.close();
+		CipherAction.addToCipher(f,subscribedUser);
 		CipherAction.generateSignature(f);
 		return true;
 	}
@@ -123,26 +122,25 @@ public class UserHandler {
 	 * @throws KeyStoreException 
 	 * @throws InvalidKeyException 
 	 * @throws UnrecoverableKeyException 
+	 * @throws NoSuchPaddingException 
+	 * @throws IllegalBlockSizeException 
 	 */
-	public static boolean follow(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException{
+	public static boolean follow(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException, IllegalBlockSizeException{
 		if(!userExists(followingUser) || isFollowing(followingUser,followedUser))
 			return false;
 		
-		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
-		Path fpath = Paths.get("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
+		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers.cif");
+		//Path fpath = Paths.get("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
 		
 		if(!f.exists()){
-			Files.createDirectories(fpath.getParent());
+			Files.createDirectories(Paths.get(f.getParent()));
 			f.createNewFile();
+			CipherAction.cipherFile(f);
 		} else {
 			CipherAction.verifySignature(f);
 		}
 		
-		BufferedWriter bw = new BufferedWriter(new FileWriter(f,true));
-		bw.write(followingUser + "\r\n");
-		bw.newLine();
-		bw.flush();
-		bw.close();
+		CipherAction.addToCipher(f,followingUser);
 		CipherAction.generateSignature(f);
 		subscribe(followingUser,followedUser);
 		return true;
