@@ -145,14 +145,15 @@ public class CipherAction {
 	}
 
 	
-	/**
-	 * @return
-	 */
-	public static boolean existsKeyStorage() {
-		File keystorage = new File("." + File.separator +"serverkeystore.jck");
-		return keystorage.exists();
-	}
 	
+	/**Auxiliary method that gets PrivateKey from the assigned keystore
+	 * @return  Private key that belongs to the assigned keystore
+	 * @throws KeyStoreException
+	 * @throws UnrecoverableKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 * @throws CertificateException
+	 */
 	private static PrivateKey getPrivateKey() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, CertificateException{
 		
 		File keystorage = new File("." + File.separator + "keytool"+File.separator+"serverkeystore.jks");
@@ -165,6 +166,14 @@ public class CipherAction {
 		return (PrivateKey) key;
 	}
 	
+	/**Auxiliary method that gets the Public Key from the assigned keystore
+	 * @return  Public key that belongs to the assigned keystore
+	 * @throws KeyStoreException
+	 * @throws UnrecoverableKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 * @throws CertificateException
+	 */
 	private static PublicKey getPublicKey() throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException, IOException{
 		File keystorage = new File("." + File.separator + "keytool"+File.separator+"serverkeystore.jks");
 		FileInputStream fis= new FileInputStream(keystorage);
@@ -176,6 +185,18 @@ public class CipherAction {
 		return publickey;
 	}
 	
+	/**Receives and a comment and stores it in a ciphered file (hybrid)
+	 * @param comment - String with the comment to be ciphered
+	 * @param f - file where the comment will be stored
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws IOException
+	 * @throws IllegalBlockSizeException
+	 */
 	public static void cipherComment(String comment, File f) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, IllegalBlockSizeException{
 		
 		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
@@ -218,6 +239,18 @@ public class CipherAction {
 		System.out.println("Comment Cipher Operation Concluded!");
 	}
 	
+	/**Method that saves and ciphers the size of an original file
+	 * @param size - size of the file received
+	 * @param f - file where the size will be stored
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws IllegalBlockSizeException
+	 */
 	public static void cypherSize(int size, File f) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException{
 		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
 		kg.init(128); //creates a key with 128 bytes
@@ -259,7 +292,18 @@ public class CipherAction {
 		System.out.println("Size Cipher Operation Concluded!");
 	}
 	
-	//need to think of way to do this
+	
+	/**Returns the original file size of a ciphered file
+	 * @param f - name of the original/ciphered file
+	 * @return the size of the deciphered file
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 */
 	public static int getOriginalSize(File f) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException{
 		File fkey = new File("sizes"+f.getPath()+".size.key");
 		File skey = new File("keys"+File.separator+fkey.getPath());
@@ -292,6 +336,17 @@ public class CipherAction {
 	}
 	
 	
+	/**Generates a signature for a given file and stores it in the server
+	 * @param f - file for which the signature will be generated
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws NoSuchAlgorithmException
+	 * @throws CertificateException
+	 * @throws IOException
+	 * @throws SignatureException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchPaddingException
+	 */
 	public static void generateSignature(File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, SignatureException, InvalidKeyException, NoSuchPaddingException{
 		FileInputStream fis= new FileInputStream(f);
 		//ObjectInputStream ois= new ObjectInputStream(fis);
@@ -311,6 +366,18 @@ public class CipherAction {
 		System.out.println("Generated a new signature for:" +f.getPath());
 	}
 	
+	/**Validates the signature of a file
+	 * @param f - file that will have it's signature validated
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws NoSuchAlgorithmException
+	 * @throws CertificateException
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 * @throws SignatureException
+	 * @throws ClassNotFoundException
+	 * @throws NoSuchPaddingException
+	 */
 	public static void verifySignature(File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, InvalidKeyException, SignatureException, ClassNotFoundException, NoSuchPaddingException{		
 	//	FileInputStream fis = new FileInputStream(f);
 		File fsig = new File(f.getPath().replace(".cif",".sig"));
@@ -339,7 +406,17 @@ public class CipherAction {
 	//	fis.close();
 	}
 	
-	//return a StringBuilder with the ciphered file's content
+	/**Gets the content of a ciphered file without saving it in the server
+	 * @param f - Ciphered file to get the content from
+	 * @return a StringBuilder with the content of the ciphered file given
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 */
 	public static StringBuilder cipherContent(File f) throws NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, InvalidKeyException{
 		PrivateKey privatekey=getPrivateKey();
 		StringBuilder sb = new StringBuilder();
@@ -375,6 +452,17 @@ public class CipherAction {
 		return sb;
 	}
 	
+	/**Cipher a single file using hybrid ciphers
+	 * @param f - the file to be ciphered
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws IllegalBlockSizeException
+	 */
 	public static void cipherFile(File f) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException{
 		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
 		kg.init(128); //creates a key with 128 bytes
@@ -421,6 +509,18 @@ public class CipherAction {
 		
 	}
 	
+	/**Auxiliary method that receives the content of a ciphered file a string to add and a file to cipher and save
+	 * @param sb - stringbuilder with the content of a ciphered file
+	 * @param s  - string with the content to add to the ciphered file
+	 * @param f  - file that will be ciphered with the new content
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws NoSuchAlgorithmException
+	 * @throws CertificateException
+	 * @throws IOException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 */
 	private static void addToCipherAux(StringBuilder sb, String s, File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, NoSuchPaddingException, InvalidKeyException{
 		sb.append("\n"+s);
 		String toAdd = sb.toString();
@@ -449,11 +549,35 @@ public class CipherAction {
 		cos.close();
 	}
 	
+	/**Adds a string to a ciphered file
+	 * @param f - Ciphered file to add the string to
+	 * @param s - String to add to the ciphered file
+	 * @throws UnrecoverableKeyException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws IOException
+	 */
 	public static void addToCipher(File f,String s) throws UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, IOException{
 		StringBuilder content= cipherContent(f);
 		addToCipherAux(content,s,f);
 	}
 	
+	/**Initiates a ciphered file with content of a String
+	 * @param f - the name of the ciphered file
+	 * @param s - string with the content to initialize
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws InvalidKeyException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 */
 	public static void startingCipher(File f, String s) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
 		KeyGenerator kg = KeyGenerator.getInstance("AES"); //creates an instance of AES algorythm
 		kg.init(128); //creates a key with 128 bytes
