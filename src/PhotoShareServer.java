@@ -322,9 +322,10 @@ public class PhotoShareServer {
 				
 				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
 				File fcif = new File(f.getPath()+".cif");
-				File fkey = new File(f.getPath()+".key");
+				File fkey = new File("keys"+f.getPath()+".key");
 				// check if there's already a photo with the same name owned by the same user or if empty file
-
+				System.out.println(fcif.getPath());
+				System.out.println(fkey.getPath());
 				if((fcif.exists() && fkey.exists()) || size==0){
 					System.out.println("Already existing file or empty file!");
 					outStream.writeObject(false);
@@ -380,7 +381,7 @@ public class PhotoShareServer {
 
 			// create file (and directories) if non existing
 			String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-			File f = new File("." + File.separator + "data" + File.separator + followed + File.separator + "photos" + File.separator + filename+".cif");
+			File f = new File("." + File.separator + "data" + File.separator + followed + File.separator + "photos" + File.separator + filename);
 			File fc = new File("." + File.separator + "data" + File.separator + followed + File.separator + "comments" + File.separator + filename +"_"+timestamp+ ".comment");
 			Path fpath = Paths.get("." + File.separator + "data" + File.separator + followed + File.separator + "comments" + File.separator + filename);
 			if(f.exists() && (UserHandler.isFollowing(follower, followed) || follower.equals(followed))){
