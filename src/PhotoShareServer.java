@@ -544,9 +544,13 @@ public class PhotoShareServer {
 		 * @throws SignatureException 
 		 */
 		private void getSubsLatest(ObjectOutputStream outStream, ObjectInputStream inStream, String user) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, SignatureException {
-
+			File subFile = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions.cif");
+			if(!subFile.exists()){
+				outStream.writeObject(false);
+			} else{
+			
 			ArrayList<String> subs = subs(user);
-
+			
 			if(subs != null && !subs.isEmpty()){
 				outStream.writeObject(true);
 				for(String subbedUser : subs){
@@ -570,7 +574,7 @@ public class PhotoShareServer {
 				outStream.writeObject("-t");
 			} else
 				outStream.writeObject(false);
-		}
+		}}
 
 		/**
 		 * Compiles a user's followed users into a list.
