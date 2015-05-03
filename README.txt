@@ -5,21 +5,18 @@ Usando o Eclipse:
  		Dentro das Run Configurations da classe PhotoShareServer deve-se aceder a tab "Arguments" e colocar nos campos indicados
  		os seguintes argumentos:
  			-Program arguments: <porto> (neste projecto o servidor deve correr no porto 23456)
- 			-VM arguments:  -Djava.security.manager 
- 							-Djava.security.policy=ec.server.policy
+ 			-VM arguments:  -Djava.security.manager -Djava.security.policy=ec.server.policy
 						
 
  			
  	Do lado do cliente
  		Dentro das Run Configurations da classe PhotoShareCliente deve-se aceder a tab "Arguments" e colocar nos campos indicados
  		os seguintes argumentos:
- 			-Program arguments: -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | -c <comment> <userId>
- 								 <photo> | -f <followUserIds> | - n]
+ 			-Program arguments: -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | -c <comment> <userId> <photo> | -f <followUserIds> | - n]
  			-VM arguments: 	-Djava.security.manager -Djava.security.policy=ec.client.policy
  			
  	Programa addUser:
- 			-VM arguments: -Djava.security.manager 
- 						-Djava.security.policy=ec.addUser.policy	
+ 			-VM arguments: -Djava.security.manager -Djava.security.policy=ec.addUser.policy	
  	
 De referir que os VM arguments sao passados de forma a que seja utilizada a sandbox desenhada pelo grupo
 
