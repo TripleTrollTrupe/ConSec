@@ -7,7 +7,7 @@ Usando o Eclipse:
  			-Program arguments: <porto> (neste projecto o servidor deve correr no porto 23456)
  			-VM arguments:  -Djava.security.manager 
  							-Djava.security.policy=server.policy
-							-Djavax.net.ssl.keyStore=/keytool/serverkeystore.jks
+							-Djavax.net.ssl.keyStore=./keytool/serverkeystore.jks
 							-Djavax.net.ssl.keyStorePassword=requiem
 
  			
@@ -17,7 +17,7 @@ Usando o Eclipse:
  			-Program arguments: -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | -c <comment> <userId>
  								 <photo> | -f <followUserIds> | - n]
  			-VM arguments: 	-Djava.security.manager -Djava.security.policy=client.policy
-							-Djavax.net.ssl.trustStore=/keytool/clientkeystore.jks
+							-Djavax.net.ssl.trustStore=./keytool/clientkeystore.jks
  			
  	
 De referir que os VM arguments sao passados de forma a que seja utilizada a sandbox desenhada pelo grupo
@@ -30,14 +30,14 @@ Nota: partindo do suposto que nos encontramos na directoria das classes respecti
 	Do lado do servidor
 	java -Djava.security.manager 
  		 -Djava.security.policy=server.policy
-		 -Djavax.net.ssl.keyStore=/keytool/serverkeystore.jks
+		 -Djavax.net.ssl.keyStore=./keytool/serverkeystore.jks
 		 -Djavax.net.ssl.keyStorePassword=requiem
 		 PhotoShareServer <port>
 
 	Do lado do cliente
 	
 	java -Djava.security.manager -Djava.security.policy=client.policy
-		 -Djavax.net.ssl.trustStore=/keytool/clientkeystore.jks
+		 -Djavax.net.ssl.trustStore=./keytool/clientkeystore.jks
 		 PhotoShareCliente -u <localUserId> -a <serverAddress> [-p <photos>| -l <userId> | -g <userId> | 
 		 -c <comment> <userId> <photo> | -f <followUserIds> | - n]
 
