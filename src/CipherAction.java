@@ -126,7 +126,7 @@ public class CipherAction {
 		Key unwrappedKey = c.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY); //unwraps the AES key inside
 		
 		c=Cipher.getInstance("AES");
-		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de		
+		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec e subclasse de		
 
 		FileInputStream fiscif = new FileInputStream(f.getPath());
 		
@@ -323,7 +323,7 @@ public class CipherAction {
 		Key unwrappedKey = c.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY); //unwraps the AES key inside
 		
 		c=Cipher.getInstance("AES");
-		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de		
+		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec e subclasse de		
 
 		FileInputStream fiscif = new FileInputStream("sizes"+File.separator+f.getPath());
 		
@@ -434,7 +434,7 @@ public class CipherAction {
 		Key unwrappedKey = c.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY); //unwraps the AES key inside
 		
 		c=Cipher.getInstance("AES");
-		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de		
+		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec e subclasse de		
 
 		CipherInputStream cis = new CipherInputStream(oiscif,c);
 		
@@ -539,7 +539,7 @@ public class CipherAction {
 		Key unwrappedKey = c.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY); //unwraps the AES key inside
 		
 		c=Cipher.getInstance("AES");
-		c.init(Cipher.ENCRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de
+		c.init(Cipher.ENCRYPT_MODE, unwrappedKey); // SecretKeySpec e subclasse de
 		FileOutputStream fos= new FileOutputStream(f);
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
 		CipherOutputStream cos = new CipherOutputStream(oos,c);
