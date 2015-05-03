@@ -513,6 +513,10 @@ public class PhotoShareServer {
 				File folder = new File("." + File.separator + "data"+ File.separator + followed + File.separator + "photos");
 
 				File[] list = folder.listFiles();
+				if(list==null){
+					outStream.writeObject("There are no photos!");
+					outStream.writeObject(false);
+				} else {
 				for(int i =0;i<list.length;i++){
 					SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 					outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()).replace(".cif",""));
@@ -520,6 +524,7 @@ public class PhotoShareServer {
 				}
 				outStream.writeObject("No more photos");
 				outStream.writeObject(false);
+			}
 			}
 		}
 
