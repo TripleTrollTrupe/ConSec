@@ -47,7 +47,7 @@ public class UserHandler {
 		if(!userExists(subscribingUser) || isSubscribed(subscribingUser,subscribedUser))
 			return false;
 
-		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions.cif");
+		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
 		//Path fpath = Paths.get("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
 
 		if(!f.exists()){
@@ -102,7 +102,7 @@ public class UserHandler {
 	 */
 	public static boolean isSubscribed(String subscribingUser, String subscribedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
 
-		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions.cif");
+		File f = new File("." + File.separator + "data" + File.separator + subscribingUser + File.separator + "subscriptions");
 		if(!f.exists())
 			return false;
 		
@@ -130,7 +130,7 @@ public class UserHandler {
 		if(!userExists(followingUser) || isFollowing(followingUser,followedUser))
 			return false;
 		
-		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers.cif");
+		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
 		//Path fpath = Paths.get("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
 		
 		if(!f.exists()){
@@ -159,7 +159,7 @@ public class UserHandler {
 	 * @throws UnrecoverableKeyException 
 	 */
 	public static boolean isFollowing(String followingUser, String followedUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException {
-		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers.cif");
+		File f = new File("." + File.separator + "data" + File.separator + followedUser + File.separator + "followers");
 		if(!f.exists())
 			return false;
 		

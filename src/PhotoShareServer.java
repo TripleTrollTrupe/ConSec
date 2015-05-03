@@ -322,7 +322,7 @@ public class PhotoShareServer {
 
 				
 				File f = new File("." + File.separator + "data" + File.separator + user + File.separator + "photos" + File.separator + filename);
-				File fcif = new File(f.getPath()+".cif");
+				File fcif = new File(f.getPath());
 				File fkey = new File("keys"+f.getPath()+".key");
 				// check if there's already a photo with the same name owned by the same user or if empty file
 				System.out.println(fcif.getPath());
@@ -471,8 +471,8 @@ public class PhotoShareServer {
 
 			outStream.writeObject("-p");
 			File f = new File(file);
-			File fcif = new File(f.getName().replace(".cif", ""));
-			File fsize = new File(f.getPath().replace(".cif",".size.cif"));
+			File fcif = new File(f.getName());
+			File fsize = new File(f.getPath()+".size");
 			int fileSize = CipherAction.getOriginalSize(fsize); //get the previous file size
 			String filename = fcif.getName();
 
@@ -520,7 +520,7 @@ public class PhotoShareServer {
 				} else {
 				for(int i =0;i<list.length;i++){
 					SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-					outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()).replace(".cif",""));
+					outStream.writeObject("Photo Name: " + list[i].getName() + " Upload Date: " + date.format(list[i].lastModified()));
 					outStream.writeObject(true);
 				}
 				outStream.writeObject("No more photos");
@@ -545,7 +545,7 @@ public class PhotoShareServer {
 		 * @throws SignatureException 
 		 */
 		private void getSubsLatest(ObjectOutputStream outStream, ObjectInputStream inStream, String user) throws IOException, ClassNotFoundException, InvalidKeyException, UnrecoverableKeyException, NoSuchAlgorithmException, NoSuchPaddingException, KeyStoreException, CertificateException, SignatureException {
-			File subFile = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions.cif");
+			File subFile = new File("." + File.separator + "data" + File.separator + user + File.separator + "subscriptions");
 			if(!subFile.exists()){
 				outStream.writeObject(false);
 			} else{
@@ -556,19 +556,26 @@ public class PhotoShareServer {
 				outStream.writeObject(true);
 				for(String subbedUser : subs){
 					outStream.writeObject(subbedUser);
-
+					
 					File photo = lastFileModified("." + File.separator + "data"+ File.separator + subbedUser + File.separator + "photos");
 					if(photo != null){
 						sendFile(outStream, inStream, "." + File.separator + "data"+ File.separator + subbedUser +
 								File.separator + "photos" + File.separator + photo.getName());
 
-						File comment = new File("." + File.separator + "data" + File.separator + subbedUser +
-								File.separator + "comments" + File.separator + photo.getName() + ".comment");
-
-						if(comment.exists() && !comment.isDirectory()){
-							outStream.writeObject("-c");
-							sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subbedUser +
-									File.separator + "comments" + File.separator + photo.getName() + ".comment");
+					//	File comment = new File("." + File.separator + "data" + File.separator + subbedUser +
+						//		File.separator + "comments" + File.separator + photo.getName() + ".comment");
+						File commentdir = new File("."+File.separator+"data"+File.separator+subbedUser+File.separator+"comments");
+						
+						File []comments = commentdir.listFiles();
+						if(comments!=null && commentdir.isDirectory()){
+						for(int i=0;i<comments.length;i++){
+							if(comments[i].getName().startsWith(photo.getName()))
+								sendFile(outStream,inStream,comments[i].getPath());
+						}
+					//	if(comment.exists() && !comment.isDirectory()){
+						//	outStream.writeObject("-c");
+							//sendFile(outStream, inStream, "." + File.separator + "data" + File.separator + subbedUser +
+								//	File.separator + "comments" + File.separator + photo.getName() + ".comment");
 						}
 					}
 				}
@@ -595,7 +602,7 @@ public class PhotoShareServer {
 		 */
 		private ArrayList<String> subs(String followingUser) throws IOException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SignatureException, ClassNotFoundException, NoSuchPaddingException {
 
-			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions.cif");
+			File subFile = new File("." + File.separator + "data" + File.separator + followingUser + File.separator + "subscriptions");
 			CipherAction.verifySignature(subFile);
 			StringBuilder sb =CipherAction.cipherContent(subFile);
 			if(!subFile.exists())

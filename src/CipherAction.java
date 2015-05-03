@@ -83,7 +83,7 @@ public class CipherAction {
 		if(!keydir.exists()){
 			Files.createDirectories(Paths.get(keydir.getPath())); // creates directory to store key if are not be exists
 		}
-		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath().replace("cif",".key"));//file where the key will be stored
+		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath()+".key");//file where the key will be stored
 		ObjectOutputStream oos = new ObjectOutputStream(kos);
 		oos.write(keyWrapped); //writes down the wrapped key
 		oos.close();
@@ -108,7 +108,7 @@ public class CipherAction {
 			InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException {
 
-		File fkey = new File(f.getPath().replace(".cif", ".key"));
+		File fkey = new File(f.getPath()+".key");
 		File skey = new File("keys"+File.separator+fkey);
 		FileInputStream fiskey = new FileInputStream(skey);
 		
@@ -216,7 +216,7 @@ public class CipherAction {
 		}
 		
 		
-		fos = new FileOutputStream(f.getPath() + ".cif"); //stream where the ciphered file will be written
+		fos = new FileOutputStream(f.getPath()); //stream where the ciphered file will be written
 			
 		cos = new CipherOutputStream(fos, c);
 		byte[] b = comment.getBytes();
@@ -269,7 +269,7 @@ public class CipherAction {
 			Files.createDirectories(Paths.get(sizedir.getPath())); // creates directory to store key if are not be exists
 		}
 		
-		fos = new FileOutputStream("."+File.separator +"sizes" + File.separator +f.getPath() + ".size.cif"); //stream where the ciphered file will be written
+		fos = new FileOutputStream("."+File.separator +"sizes" + File.separator +f.getPath() + ".size"); //stream where the ciphered file will be written
 			
 		cos = new CipherOutputStream(fos, c);
 		byte[] b = ByteBuffer.allocate(4).putInt(size).array();
@@ -305,7 +305,7 @@ public class CipherAction {
 	 * @throws CertificateException
 	 */
 	public static int getOriginalSize(File f) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException{
-		File fkey = new File("sizes"+f.getPath()+".size.key");
+		File fkey = new File("sizes"+f.getPath()+".key");
 		File skey = new File("keys"+File.separator+fkey.getPath());
 		FileInputStream fiskey = new FileInputStream(skey);
 		
@@ -325,7 +325,7 @@ public class CipherAction {
 		c=Cipher.getInstance("AES");
 		c.init(Cipher.DECRYPT_MODE, unwrappedKey); // SecretKeySpec é subclasse de		
 
-		FileInputStream fiscif = new FileInputStream("sizes"+File.separator+f.getPath()+".size.cif");
+		FileInputStream fiscif = new FileInputStream("sizes"+File.separator+f.getPath());
 		
 		CipherInputStream cis = new CipherInputStream(fiscif, c);	
 		byte []size = new byte [4];
@@ -350,7 +350,7 @@ public class CipherAction {
 	public static void generateSignature(File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, SignatureException, InvalidKeyException, NoSuchPaddingException{
 		FileInputStream fis= new FileInputStream(f);
 		//ObjectInputStream ois= new ObjectInputStream(fis);
-		FileOutputStream sigfos= new FileOutputStream(f.getPath().replace(".cif",".sig"));
+		FileOutputStream sigfos= new FileOutputStream(f.getPath()+".sig");
 		ObjectOutputStream sigoos = new ObjectOutputStream(sigfos);
 		PrivateKey privatekey=getPrivateKey();
 		Signature s = Signature.getInstance("MD5withRSA");
@@ -380,7 +380,7 @@ public class CipherAction {
 	 */
 	public static void verifySignature(File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, InvalidKeyException, SignatureException, ClassNotFoundException, NoSuchPaddingException{		
 	//	FileInputStream fis = new FileInputStream(f);
-		File fsig = new File(f.getPath().replace(".cif",".sig"));
+		File fsig = new File(f.getPath()+".sig");
 		System.out.println(fsig.getPath());
 		FileInputStream fissig = new FileInputStream(fsig);
 		ObjectInputStream oissig = new ObjectInputStream(fissig);
@@ -426,7 +426,7 @@ public class CipherAction {
 		
 
 		
-		FileInputStream fiskey = new FileInputStream("keys"+File.separator+f.getPath().replace(".cif",".key"));
+		FileInputStream fiskey = new FileInputStream("keys"+File.separator+f.getPath()+".key");
 		ObjectInputStream oiskey = new ObjectInputStream(fiskey);
 		byte[] keyEncoded = new byte[256]; //the key's size after wrapping
 		oiskey.read(keyEncoded); //gets key from file
@@ -498,7 +498,7 @@ public class CipherAction {
 		if(!keydir.exists()){
 			Files.createDirectories(Paths.get(keydir.getPath())); // creates directory to store key if are not be exists
 		}
-		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath().replace(".cif", ".key"));//file where the key will be stored
+		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath()+ ".key");//file where the key will be stored
 		ObjectOutputStream koos = new ObjectOutputStream(kos);
 		koos.write(keyWrapped); //writes down the wrapped key
 		koos.close();
@@ -522,7 +522,7 @@ public class CipherAction {
 	private static void addToCipherAux(StringBuilder sb, String s, File f) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, NoSuchPaddingException, InvalidKeyException{
 		sb.append("\n"+s);
 		String toAdd = sb.toString();
-		File fkey = new File(f.getPath().replace(".cif",".key"));
+		File fkey = new File(f.getPath()+".key");
 		File skey = new File("keys"+File.separator+fkey);
 		FileInputStream fiskey = new FileInputStream(skey);		
 		PrivateKey privateKey=getPrivateKey(); //gets privateKey !!check if working properly !!
@@ -611,7 +611,7 @@ public class CipherAction {
 		if(!keydir.exists()){
 			Files.createDirectories(Paths.get(keydir.getPath())); // creates directory to store key if are not be exists
 		}
-		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath().replace(".cif", ".key"));//file where the key will be stored
+		FileOutputStream kos = new FileOutputStream("keys"+File.separator +f.getPath()+".key");//file where the key will be stored
 		ObjectOutputStream koos = new ObjectOutputStream(kos);
 		koos.write(keyWrapped); //writes down the wrapped key
 		koos.close();

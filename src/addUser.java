@@ -48,7 +48,7 @@ public class addUser {
 			else {
 				System.out.println("Shutting down server...");
 				System.exit(0);
-			}
+			}		
 	
 			
 		}
@@ -59,6 +59,11 @@ public class addUser {
 		
 		System.out.println("Enter User name:");
 		user = scan.next();
+		if(existsUser(up,user)){
+			System.out.println("User already exists!");
+			scan.close();
+			System.exit(0);
+		}
 		System.out.println("Enter password:");
 		passwd=scan.next();
 		
@@ -87,7 +92,9 @@ public class addUser {
 		}
 		return sb.toString();		
 	}
-	
+	private static boolean existsUser(File f, String user) throws IOException{
+		return Auth.getFileString(f).contains(user+":");
+	}
 
 	
 }
