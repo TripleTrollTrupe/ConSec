@@ -13,8 +13,10 @@ import java.util.Scanner;
 
 /**
  * Class responsible for adding a user and his password to the server's log
- * @author Paulo
- *
+ * @author SC001
+ * @author fc41935 - Paulo Antunes
+ * @author fc43273 - Ricardo Costa
+ * @author fc44223 - Henrique Mendes
  */
 public class addUser {
 

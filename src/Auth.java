@@ -15,6 +15,13 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 
+/**Class responsible for MAC operations
+ * @author SC001
+ * @author fc41935 - Paulo Antunes
+ * @author fc43273 - Ricardo Costa
+ * @author fc44223 - Henrique Mendes
+ *
+ */
 public class Auth {
 	/** checks if a given MAC is valid
 	 * @param scan -scanner used to receive password to generate new MAC

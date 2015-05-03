@@ -20,7 +20,10 @@ import javax.crypto.NoSuchPaddingException;
 
 
 /** Class that handles user related operations
- * @author Paulo
+ * @author SC001
+ * @author fc41935 - Paulo Antunes
+ * @author fc43273 - Ricardo Costa
+ * @author fc44223 - Henrique Mendes
  *
  */
 public class UserHandler {

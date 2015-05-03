@@ -28,6 +28,13 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
+/**Auxiliary class for ciphering operations
+ * @author SC001
+ * @author fc41935 - Paulo Antunes
+ * @author fc43273 - Ricardo Costa
+ * @author fc44223 - Henrique Mendes
+ *
+ */
 public class CipherAction {
 
 
