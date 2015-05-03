@@ -13,7 +13,7 @@ grant codeBase "file:bin${/}-"{
 	permission java.io.FilePermission ".${/}keys${/}-" , "read , write";
 	permission java.io.FilePermission ".${/}sizes" , "read, write";
 	permission java.io.FilePermission ".${/}sizes${/}-" , "read , write";
-}
+};
 grant codeBase "file:${java.home}/lib/ext/*" { 
 	permission java.security.AllPermission; 
 };
