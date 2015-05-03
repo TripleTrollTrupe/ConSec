@@ -1,0 +1,20 @@
+grant codeBase"file:${/}-"{
+	permission java.net.SocketPermission "*:23456","listen"; // to listen for new connections
+	permission java.net.SocketPermission "*:1024-","accept"; // 1-1023 are reserved for other uses
+	permission java.io.FilePermission ".${/}shadow${/}" , "read,write"; //to create up and up.sha files if they do not exist
+	permission java.io.FilePermission ".${/}shadow${/}up" , "read,write"; // to check users and passwords 
+	permission java.io.FilePermission ".${/}shadow${/}up.sha" , "read,write";//to check MAC 
+	permission java.io.FilePermission ".${/}data${/}-" , "read,write"; // to write and read files to user space
+	permission java.io.FilePermission ".${/}data" , "read,write"; // to check/create user folders if non existent
+	permission java.io.FilePermission ".${/}" , "read,write"; // to check/create data folder if non existent
+	permission java.util.PropertyPermission "javax.net.ssl.keyStore" , "write, read";
+	permission java.util.PropertyPermission "javax.net.ssl.keyStorePassword" , "write, read";
+	permission java.io.FilePermission ".${/}keytool${/}serverkeystore.jks" , "read, write";
+	permission java.io.FilePermission ".${/}keys" , "read, write";
+	permission java.io.FilePermission ".${/}keys${/}-" , "read , write";
+	permission java.io.FilePermission ".${/}sizes" , "read, write";
+	permission java.io.FilePermission ".${/}sizes${/}-" , "read , write";
+};
+grant codeBase "file:${java.home}/lib/ext/*" { 
+	permission java.security.AllPermission; 
+};

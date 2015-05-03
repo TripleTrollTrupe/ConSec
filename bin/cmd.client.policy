@@ -1,0 +1,5 @@
+grant codeBase "file:${/}-"{
+    permission java.net.SocketPermission "*:23456", "connect,resolve"; // to connect to any server in port 23456
+    permission java.util.PropertyPermission "javax.net.ssl.trustStore", "read, write";
+	permission java.io.FilePermission "<<ALL FILES>>","read,write"; // to write and read all files, for sending receiving
+};
