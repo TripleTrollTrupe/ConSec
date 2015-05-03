@@ -30,21 +30,21 @@ import javax.crypto.SecretKey;
 
 public class CipherAction {
 
-	/** This method is not necessary and is only used for testing with ciphers
-	 * @throws SignatureException 
-	 * @throws ClassNotFoundException 
+
+	/** Ciphers(hybrid) a file received from a Stream and stores the ciphered file and key in the server
+	 * @param f    - original file name
+	 * @param size - size of the file sent by the client
+	 * @param in   - stream where the file will be received
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws IOException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
 	 */
-	public static void main(String args[]) throws InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchPaddingException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException, SignatureException, ClassNotFoundException {
-	//	System.out.println(getPrivateKey());
-	//	System.out.println(getPublicKey());
-	//	File f=new File("."+File.separator+"data"+File.separator+"getpics"+File.separator+"subscriptions");
-	//	System.out.println(cipherContent(f).toString());
-	//	StringBuilder sb=cipherContent(f);
-	//	addToCipher(f,"leldone");
-	//	System.out.println(cipherContent(f).toString());
-	}
-	// Cipher might be done while transferring no need to save the whole file beforehand
 	public static void cipherFile(File f, int size, ObjectInputStream in) throws NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeyException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException, IllegalBlockSizeException, BadPaddingException {
 		
@@ -92,6 +92,18 @@ public class CipherAction {
 
 	}
 	
+	/**Decipher file stored in server and sent to client 
+	 * @param f - File name
+	 * @param out - Stream where the file will be written
+	 * @param filesize - original file size, not the size of the ciphered file!
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 */
 	public static void decipherFile(File f,ObjectOutputStream out, int filesize) throws IOException,
 			InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchPaddingException, UnrecoverableKeyException, KeyStoreException, CertificateException {
@@ -132,47 +144,12 @@ public class CipherAction {
 		
 	}
 
-	/*method that generates keys for the server, to be used exclusively within the server! 
-	//it's probably becoming obsolete because of keytool usage
-	public static void generateKeys() throws NoSuchAlgorithmException,
-			IOException {
-
-		File pubkey = new File("." + File.separator + "keys" + File.separator
-				+ "public.key");
-		File privkey = new File("." + File.separator + "keys" + File.separator
-				+ "private.key");
-		System.out.println("Generating public and private keys...");
-		// creates file to store public key and directories
-
-		Files.createDirectories(Paths.get(pubkey.getPath()).getParent());
-		pubkey.createNewFile();
-
-		// creates file to store private key and directories
-
-		Files.createDirectories(Paths.get(privkey.getPath()).getParent());
-		privkey.createNewFile();
-
-		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
-				pubkey));
-		ObjectOutputStream oos2 = new ObjectOutputStream(new FileOutputStream(
-				privkey));
-		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-		kpg.initialize(1024);
-		KeyPair kp = kpg.generateKeyPair();
-
-		PublicKey ku = kp.getPublic();
-		byte[] kuEncoded = ku.getEncoded();
-		oos.write(kuEncoded);
-		oos.close();
-		PrivateKey kr = kp.getPrivate();
-		byte[] krEncoded = kr.getEncoded();
-		oos2.write(krEncoded);
-		oos2.close();
-		System.out.println("Public and Private Keys have been generated!");
-	}*/
-	//can be used to check existence of keystorage
+	
+	/**
+	 * @return
+	 */
 	public static boolean existsKeyStorage() {
-		File keystorage = new File("." + File.separator + "keytool"+File.separator+"serverkeystore.jck");
+		File keystorage = new File("." + File.separator +"serverkeystore.jck");
 		return keystorage.exists();
 	}
 	
